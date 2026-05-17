@@ -1,0 +1,16 @@
+# Large bioinformatics data (reference genomes, raw reads, known sites)
+data/
+
+# Pipeline outputs (reproducible)
+results/
+
+# Conda environments
+envs/*/
+
+# OS
+.DS_Store
+*.swp
+
+# Editor
+.claude/
+tags
