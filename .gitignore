@@ -13,6 +13,7 @@ external/GigaTIME/
 # Python caches
 __pycache__/
 *.pyc
+docs/assets/**/.matplotlib/
 
 # OS
 .DS_Store

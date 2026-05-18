@@ -299,7 +299,17 @@ results/gigatime_tcga_brca_extremes/advisor_summary/erbb2_tpm_distribution.png
 results/gigatime_tcga_brca_extremes/advisor_summary/her2_group_channel_deltas.png
 results/gigatime_tcga_brca_extremes/advisor_summary/her2_group_channel_boxplots.png
 results/gigatime_tcga_brca_extremes/advisor_summary/erbb2_vs_virtual_mif_scatter.png
+docs/assets/virtual_mif_channels/virtual_mif_all_channel_group_means.png
+docs/assets/virtual_mif_channels/virtual_mif_slide_channel_matrix.png
+docs/assets/virtual_mif_channels/her2_high_reference_all_virtual_mif_channels.png
+docs/assets/virtual_mif_channels/her2_low_reference_all_virtual_mif_channels.png
+docs/assets/virtual_mif_composites/her2_high_immune_checkpoint_virtual_mif_montage.png
+docs/assets/virtual_mif_composites/her2_low_immune_checkpoint_virtual_mif_montage.png
 ```
+
+The files under `docs/assets/virtual_mif_channels/` are documentation-facing images of the GigaTIME virtual mIF outputs. They show all 23 predicted channels, including representative spatial tile maps for one ERBB2-high slide and one ERBB2-low slide. See `docs/virtual_mif_channel_outputs.md` for a figure-by-figure explanation.
+
+The files under `docs/assets/virtual_mif_composites/` look closer to real multiplex immunofluorescence images. They are made by rerunning GigaTIME on selected H&E tiles, keeping the full predicted channel maps, and compositing marker colors on a black background. They are still virtual predictions, not real mIF measurements.
 
 ### Step 7: Render visual examples from the H&E slides
 

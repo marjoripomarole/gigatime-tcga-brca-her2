@@ -1,0 +1,5 @@
+figure,path,caption
+All-channel group means,docs/assets/virtual_mif_channels/virtual_mif_all_channel_group_means.png,"Mean GigaTIME virtual mIF activation for all 23 channels, compared between ERBB2-high and ERBB2-low processed slides."
+Slide by channel matrix,docs/assets/virtual_mif_channels/virtual_mif_slide_channel_matrix.png,Relative activation heatmap showing each processed slide against all GigaTIME virtual mIF channels.
+HER2-high reference,docs/assets/virtual_mif_channels/her2_high_reference_all_virtual_mif_channels.png,Spatial tile-level GigaTIME virtual mIF maps for all 23 channels on one representative processed slide.
+HER2-low reference,docs/assets/virtual_mif_channels/her2_low_reference_all_virtual_mif_channels.png,Spatial tile-level GigaTIME virtual mIF maps for all 23 channels on one representative processed slide.

@@ -10,6 +10,9 @@ The goal is to generate virtual multiplex immunofluorescence (mIF) features from
 - `scripts/gdc_query_tcga_brca.py`: queries GDC for TCGA-BRCA diagnostic slides and STAR-count RNA-seq files, writes GDC manifests, and can extract ERBB2 expression.
 - `scripts/run_gigatime_tcga_brca.py`: tiles TCGA-BRCA `.svs` slides, runs the official GigaTIME model, and aggregates virtual mIF channels per slide.
 - `scripts/summarize_her2_gigatime.py`: joins GigaTIME slide scores with ERBB2 expression and makes HER2-high/HER2-low summary figures.
+- `scripts/render_virtual_mif_channel_images.py`: renders all-channel virtual mIF figures from GigaTIME tile and slide predictions.
+- `scripts/render_virtual_mif_composites.py`: reruns GigaTIME on selected tiles and renders fluorescence-style virtual mIF composites from the full predicted channel maps.
+- `docs/virtual_mif_channel_outputs.md`: explains the generated virtual mIF channel images and how to interpret them.
 - `docs/plain_language_methodology.md`: detailed non-specialist explanation of the study background, methodology, outputs, and current limitations.
 - `docs/advisor_brief.md`: concise project framing and discussion points.
 - `docs/current_pilot_run.md`: current two-case run status and advisor-facing caveats.
@@ -102,6 +105,22 @@ python scripts/summarize_her2_gigatime.py \
 ```
 
 This writes joined data, channel-level HER2-high versus HER2-low summaries, figures, and `advisor_summary.md`.
+
+## 4. Render All Virtual mIF Channel Images
+
+```bash
+conda run -n gigatime-tcga python scripts/render_virtual_mif_channel_images.py
+```
+
+This writes documentation-facing figures to `docs/assets/virtual_mif_channels/`, including all-channel group means, a slide-by-channel activation matrix, and HER2-high/HER2-low reference grids for the 23 GigaTIME virtual mIF channels. See `docs/virtual_mif_channel_outputs.md` for interpretation.
+
+To create fluorescence-style virtual mIF images that look closer to real multiplex immunofluorescence panels:
+
+```bash
+conda run -n gigatime-tcga python scripts/render_virtual_mif_composites.py
+```
+
+This writes H&E-versus-virtual-mIF panels and marker-composite montages to `docs/assets/virtual_mif_composites/`. These are still GigaTIME predictions, not experimental mIF data.
 
 ## Notes for the Advisor Discussion
 
