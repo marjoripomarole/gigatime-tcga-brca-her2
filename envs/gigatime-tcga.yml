@@ -1,0 +1,26 @@
+name: gigatime-tcga
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - openslide
+  - pip:
+      - albumentations~=1.4
+      - easydict~=1.13
+      - huggingface-hub~=0.26
+      - matplotlib~=3.9
+      - numpy~=2.2
+      - opencv-python-headless~=4.10
+      - openslide-python~=1.3
+      - pandas~=2.3
+      - pillow~=10.4
+      - pyarrow~=17.0
+      - pyyaml~=6.0
+      - requests~=2.32
+      - scikit-image~=0.25
+      - scipy~=1.16
+      - seaborn~=0.13
+      - torch~=2.4
+      - torchvision~=0.19
+      - tqdm~=4.66

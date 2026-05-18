@@ -1,0 +1,31 @@
+project: TCGA-BRCA
+gene_symbol: ERBB2
+gene_id: ENSG00000141736
+
+paths:
+  gdc_out_dir: data/tcga_brca
+  slides_dir: data/tcga_brca/slides
+  gigatime_repo: external/GigaTIME
+  gigatime_results: results/gigatime_tcga_brca
+  advisor_summary: results/gigatime_tcga_brca/advisor_summary
+
+pilot:
+  case_limit: 25
+  slide_download_limit: 5
+  tile_limit_per_slide: 512
+  batch_size: 16
+  tissue_threshold: 0.35
+
+analysis:
+  her2_grouping: median_erbb2_tpm
+  key_channels:
+    - CD3
+    - CD8
+    - CD4
+    - CD20
+    - CD68
+    - CD11c
+    - PD-1
+    - PD-L1
+    - CK
+    - Ki67

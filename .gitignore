@@ -7,6 +7,13 @@ results/
 # Conda environments
 envs/*/
 
+# Local upstream dependency clone
+external/GigaTIME/
+
+# Python caches
+__pycache__/
+*.pyc
+
 # OS
 .DS_Store
 *.swp
