@@ -1,0 +1,77 @@
+<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Clinical HER2 Classifier Results</title>
+<style>
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1f2933; background: #f6f7f9; }
+main { max-width: 1120px; margin: 0 auto; padding: 42px 28px 70px; }
+.hero { background: #111827; color: white; padding: 34px; border-radius: 8px; }
+.hero h1 { margin: 0 0 10px; font-size: 34px; letter-spacing: 0; }
+.hero p { font-size: 18px; line-height: 1.5; max-width: 900px; }
+section { background: white; margin-top: 18px; padding: 26px; border-radius: 8px; border: 1px solid #e5e7eb; }
+h2 { margin: 0 0 14px; font-size: 24px; }
+h3 { margin: 20px 0 10px; }
+p, li { font-size: 16px; line-height: 1.55; }
+.callout { background: #eef6ff; border-left: 5px solid #2563eb; padding: 14px 16px; margin: 16px 0; }
+.warning { background: #fff7ed; border-left: 5px solid #f97316; padding: 14px 16px; margin: 16px 0; }
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+th, td { text-align: left; border-bottom: 1px solid #e5e7eb; padding: 8px 9px; vertical-align: top; }
+th { background: #f3f4f6; font-weight: 650; }
+img { display: block; width: 100%; max-width: 980px; height: auto; margin: 14px auto; border: 1px solid #e5e7eb; border-radius: 6px; background: white; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.small { color: #52606d; font-size: 14px; }
+</style></head><body><main>
+
+<div class="hero">
+  <h1>Clinical HER2 Classifier Results</h1>
+  <p>Classifier-only summary for the TCGA-BRCA GigaTIME HER2 pilot: model inputs, cross-validated metrics, confusion matrices, ERBB2 RNA reference, and next modeling steps.</p>
+</div>
+
+<section><h2>Bottom Line</h2>
+<div class="callout">
+  <p><strong>Best image-derived signal:</strong> HER2-low versus HER2-zero reached balanced accuracy 0.800 and macro AUC 0.870 using GigaTIME mean + fraction features.</p>
+</div>
+<div class="warning">
+  <p><strong>Important caution:</strong> HER2-positive classification from GigaTIME/H&amp;E features was weak, and full three-class HER2 prediction was at chance. This is not a clinical diagnostic model.</p>
+</div>
+</section>
+<section><h2>What Was Trained</h2>
+<ul>
+  <li>Input: slide-level GigaTIME virtual mIF features from the 256-tile run.</li>
+  <li>Labels: clinical HER2 groups from TCGA IHC/ISH fields.</li>
+  <li>Models: regularized logistic classifier and nearest-centroid baseline.</li>
+  <li>Evaluation: leave-one-out cross-validation.</li>
+</ul>
+<p>Every reported prediction is held out: each slide is predicted after that slide is removed from the training set.</p>
+</section>
+<section><h2>Feature Sets</h2><table><thead><tr><th>Feature set</th><th>Number of features</th><th>Example features</th></tr></thead><tbody><tr><td>GigaTIME mean channels</td><td>23</td><td>mean_DAPI, mean_TRITC, mean_Cy5, mean_PD-1, mean_CD14, mean_CD4, mean_T-bet, mean_CD34...</td></tr><tr><td>GigaTIME mean + fraction channels</td><td>46</td><td>mean_DAPI, mean_TRITC, mean_Cy5, mean_PD-1, mean_CD14, mean_CD4, mean_T-bet, mean_CD34...</td></tr><tr><td>Interpretable marker means</td><td>10</td><td>mean_CD3, mean_CD8, mean_CD4, mean_CD20, mean_CD68, mean_CD11c, mean_PD-1, mean_PD-L1...</td></tr><tr><td>Virtual programs</td><td>5</td><td>virtual_myeloid_checkpoint, virtual_t_cell_checkpoint, virtual_all_immune_checkpoint, virtual_proliferation, virtual_epithelial</td></tr><tr><td>ERBB2 RNA reference</td><td>1</td><td>erbb2_tpm</td></tr></tbody></table></section>
+<section><h2>Best GigaTIME/H&amp;E Results</h2><table><thead><tr><th>Task</th><th>Best feature set</th><th>N</th><th>Accuracy</th><th>Balanced accuracy</th><th>Macro AUC</th><th>Sensitivity</th><th>Specificity</th></tr></thead><tbody><tr><td>HER2-low vs HER2-zero</td><td>GigaTIME mean + fraction channels</td><td>20</td><td>0.800</td><td>0.800</td><td>0.870</td><td>0.700</td><td>0.900</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>GigaTIME mean + fraction channels</td><td>30</td><td>0.533</td><td>0.475</td><td>0.430</td><td>0.300</td><td>0.650</td></tr><tr><td>HER2-positive vs HER2-low vs HER2-zero</td><td>GigaTIME mean + fraction channels</td><td>30</td><td>0.333</td><td>0.333</td><td>0.555</td><td></td><td></td></tr></tbody></table><p class='small'>The HER2-low versus HER2-zero classifier is the only promising image-derived result so far.</p></section>
+<section><h2>Performance Plot</h2><img src='../docs/assets/clinical_her2_classifier_baseline/classifier_balanced_accuracy.png' alt='Classifier balanced accuracy'></section>
+<section><h2>Confusion Matrices</h2>
+<p>These matrices show the best GigaTIME/H&amp;E regularized logistic model for each task. They do not use ERBB2 RNA.</p>
+<div class="grid">
+  <div><h3>HER2-low vs HER2-zero</h3><img src="../docs/assets/clinical_her2_classifier_baseline/confusion_her2_low_vs_zero.png" alt="HER2-low versus HER2-zero confusion matrix"></div>
+  <div><h3>HER2-positive vs HER2-negative</h3><img src="../docs/assets/clinical_her2_classifier_baseline/confusion_her2_positive_vs_negative.png" alt="HER2-positive versus HER2-negative confusion matrix"></div>
+  <div><h3>Three-class HER2</h3><img src="../docs/assets/clinical_her2_classifier_baseline/confusion_her2_three_class.png" alt="Three-class HER2 confusion matrix"></div>
+</div>
+</section>
+<section><h2>ERBB2 RNA Reference</h2><p>ERBB2 RNA is included only as a non-H&amp;E reference. It is not an image classifier.</p><table><thead><tr><th>Task</th><th>N</th><th>Accuracy</th><th>Balanced accuracy</th><th>Macro AUC</th><th>Sensitivity</th><th>Specificity</th></tr></thead><tbody><tr><td>HER2-low vs HER2-zero</td><td>20</td><td>0.650</td><td>0.650</td><td>0.690</td><td>0.700</td><td>0.600</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>30</td><td>0.900</td><td>0.850</td><td>0.800</td><td>0.700</td><td>1.000</td></tr><tr><td>HER2-positive vs HER2-low vs HER2-zero</td><td>30</td><td>0.233</td><td>0.233</td><td>0.567</td><td></td><td></td></tr></tbody></table><p class='small'>ERBB2 RNA performs much better for HER2-positive versus HER2-negative than the current GigaTIME/H&amp;E features, showing that the labels contain HER2 signal that the current image-derived model is not capturing reliably yet.</p></section>
+<section><h2>All Regularized Logistic Results</h2><table><thead><tr><th>Task</th><th>Feature set</th><th>N</th><th>Accuracy</th><th>Balanced accuracy</th><th>Macro AUC</th></tr></thead><tbody><tr><td>HER2-low vs HER2-zero</td><td>GigaTIME mean + fraction channels</td><td>20</td><td>0.800</td><td>0.800</td><td>0.870</td></tr><tr><td>HER2-low vs HER2-zero</td><td>GigaTIME mean channels</td><td>20</td><td>0.700</td><td>0.700</td><td>0.710</td></tr><tr><td>HER2-low vs HER2-zero</td><td>Virtual programs</td><td>20</td><td>0.700</td><td>0.700</td><td>0.770</td></tr><tr><td>HER2-low vs HER2-zero</td><td>ERBB2 RNA reference</td><td>20</td><td>0.650</td><td>0.650</td><td>0.690</td></tr><tr><td>HER2-low vs HER2-zero</td><td>Interpretable marker means</td><td>20</td><td>0.600</td><td>0.600</td><td>0.750</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>ERBB2 RNA reference</td><td>30</td><td>0.900</td><td>0.850</td><td>0.800</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>GigaTIME mean + fraction channels</td><td>30</td><td>0.533</td><td>0.475</td><td>0.430</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>Virtual programs</td><td>30</td><td>0.633</td><td>0.475</td><td>0.125</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>Interpretable marker means</td><td>30</td><td>0.600</td><td>0.450</td><td>0.260</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>GigaTIME mean channels</td><td>30</td><td>0.533</td><td>0.400</td><td>0.090</td></tr><tr><td>HER2-positive vs HER2-low vs HER2-zero</td><td>GigaTIME mean + fraction channels</td><td>30</td><td>0.333</td><td>0.333</td><td>0.555</td></tr><tr><td>HER2-positive vs HER2-low vs HER2-zero</td><td>Interpretable marker means</td><td>30</td><td>0.333</td><td>0.333</td><td>0.488</td></tr><tr><td>HER2-positive vs HER2-low vs HER2-zero</td><td>Virtual programs</td><td>30</td><td>0.300</td><td>0.300</td><td>0.463</td></tr><tr><td>HER2-positive vs HER2-low vs HER2-zero</td><td>GigaTIME mean channels</td><td>30</td><td>0.233</td><td>0.233</td><td>0.405</td></tr><tr><td>HER2-positive vs HER2-low vs HER2-zero</td><td>ERBB2 RNA reference</td><td>30</td><td>0.233</td><td>0.233</td><td>0.567</td></tr></tbody></table></section>
+<section><h2>Example Held-Out Mistakes</h2><table><thead><tr><th>Task</th><th>Case</th><th>True label</th><th>Predicted label</th><th>Model confidence</th></tr></thead><tbody><tr><td>HER2-low vs HER2-zero</td><td>TCGA-A2-A0T6</td><td>HER2-low</td><td>HER2-zero</td><td>0.729</td></tr><tr><td>HER2-low vs HER2-zero</td><td>TCGA-A1-A0SK</td><td>HER2-zero</td><td>HER2-low</td><td>0.810</td></tr><tr><td>HER2-low vs HER2-zero</td><td>TCGA-A1-A0SP</td><td>HER2-zero</td><td>HER2-low</td><td>0.506</td></tr><tr><td>HER2-low vs HER2-zero</td><td>TCGA-A2-A0EW</td><td>HER2-zero</td><td>HER2-low</td><td>0.999</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>TCGA-A1-A0SM</td><td>HER2-positive</td><td>HER2-negative</td><td>0.625</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>TCGA-A2-A04U</td><td>HER2-positive</td><td>HER2-negative</td><td>0.868</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>TCGA-A2-A04X</td><td>HER2-positive</td><td>HER2-negative</td><td>0.831</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>TCGA-A2-A0EQ</td><td>HER2-positive</td><td>HER2-negative</td><td>0.997</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>TCGA-A2-A0EY</td><td>HER2-positive</td><td>HER2-negative</td><td>0.738</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>TCGA-A2-A0SY</td><td>HER2-positive</td><td>HER2-negative</td><td>0.936</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>TCGA-A2-A0T1</td><td>HER2-positive</td><td>HER2-negative</td><td>0.830</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>TCGA-5T-A9QA</td><td>HER2-negative</td><td>HER2-positive</td><td>0.629</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>TCGA-A2-A04T</td><td>HER2-negative</td><td>HER2-positive</td><td>0.530</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>TCGA-A2-A0EN</td><td>HER2-negative</td><td>HER2-positive</td><td>0.616</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>TCGA-A1-A0SK</td><td>HER2-negative</td><td>HER2-positive</td><td>0.687</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>TCGA-A2-A0EU</td><td>HER2-negative</td><td>HER2-positive</td><td>0.965</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>TCGA-A2-A0EV</td><td>HER2-negative</td><td>HER2-positive</td><td>0.520</td></tr><tr><td>HER2-positive vs HER2-negative</td><td>TCGA-A2-A0T0</td><td>HER2-negative</td><td>HER2-positive</td><td>0.964</td></tr></tbody></table><p class='small'>Mistakes are useful here. They tell us what to inspect next: the H&amp;E tiles and virtual channels for cases the classifier confuses.</p></section>
+<section><h2>Scientific Interpretation</h2>
+<ul>
+  <li>We now have a real classifier baseline, not only group-average comparisons.</li>
+  <li>The HER2-low versus HER2-zero result matches the earlier group-average pattern.</li>
+  <li>The current slide-level GigaTIME features are not enough for reliable HER2-positive diagnosis.</li>
+  <li>The full three-class problem is not solved.</li>
+  <li>The result supports a sharper research hypothesis: GigaTIME may capture a microenvironment signal that separates HER2-low from HER2-zero better than it captures HER2-positive status.</li>
+</ul>
+</section>
+<section><h2>Next Classifier Step</h2>
+<ol>
+  <li>Restrict features to tumor-rich tiles instead of all tissue tiles.</li>
+  <li>Add tile distribution features: percentiles, maximum signal, and heterogeneity.</li>
+  <li>Add H&amp;E tile embeddings if available.</li>
+  <li>Move toward multiple-instance learning after tile-level features are organized.</li>
+  <li>Evaluate with nested cross-validation or a separate held-out test set before making stronger claims.</li>
+</ol>
+</section>
+</main></body></html>
