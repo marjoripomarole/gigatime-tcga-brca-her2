@@ -25,6 +25,7 @@ The goal is to generate virtual multiplex immunofluorescence (mIF) features from
 - `scripts/render_clinical_her2_visual_qc.py`: renders clinical HER2 visual QC panels for cases driving high virtual `CD68`/`PD-L1`/`CD11c` signal.
 - `scripts/build_clinical_her2_findings_report.py`: builds a simple display notebook and HTML report for the current clinical HER2 findings.
 - `docs/virtual_mif_channel_outputs.md`: explains the generated virtual mIF channel images and how to interpret them.
+- `docs/README.md`: start-here guide that separates current summaries from historical 30-slide reports.
 - `docs/plain_language_methodology.md`: detailed non-specialist explanation of the study background, methodology, outputs, and current limitations.
 - `docs/paper_proposal_process_log.md`: living process log for turning the pilot into a paper or grant proposal.
 - `docs/clinical_her2_cohort_selection.md`: selected 30-case clinical HER2 pilot cohort and selection counts.
@@ -303,6 +304,8 @@ This writes:
 
 ## Notes for the Advisor Discussion
 
+Current top-line result: the expanded 20/20/20 run is the result to present. Earlier bullets describe the precursor 30-slide run and why we expanded it.
+
 - HER2 is represented here by `ERBB2` RNA expression from TCGA-BRCA STAR-count files.
 - GigaTIME outputs virtual mIF maps for 23 channels, including immune markers such as `CD3`, `CD8`, `CD4`, `CD20`, `CD68`, `PD-1`, and `PD-L1`.
 - The first deliverable is a replication/adaptation pilot, not a new model: run the released model on TCGA-BRCA H&E slides and ask whether virtual TIME signatures differ across clinical HER2 groups.
@@ -315,4 +318,7 @@ This writes:
 - The pre-classifier cleanup shows that the HER2-zero greater than HER2-low CD68/PD-L1/CD11c signal persists after cellular-tissue filtering, but weakens under strict CK-enriched tile selection. This suggests the original signal may depend partly on broader tissue context, not only tumor-rich tiles.
 - The cleaned-view classifier comparison preserves HER2-low versus HER2-zero balanced accuracy at 0.800 after cellular-tissue filtering, but drops to 0.650 in CK-enriched views. This supports a microenvironment/tissue-context interpretation more than a purely tumor-epithelial HER2 classifier.
 - The first visual QC pass found that high virtual CD68/PD-L1/CD11c tiles were tissue-containing and cellular rather than obvious blank background, but this still does not validate the virtual marker biology.
+- The expanded 20/20/20 run processed 60 slides and strengthened the HER2-low versus HER2-zero signal. Several all-tissue or QC-cellular pairwise differences now pass within-view BH correction for `CD3`, `CD4`, `CD11c`, `CD68`, and QC-cellular `PD-L1`.
+- In the expanded run, the best HER2-low versus HER2-zero GigaTIME/H&E classifier remained around balanced accuracy 0.800 and macro AUC 0.820. HER2-positive classification from GigaTIME/H&E remained weak.
+- RNA marker and RNA program validation remain weak in the expanded run, so the strongest current claim is still hypothesis-generating image-derived HER2-state association, not clinical diagnosis.
 - The sharper paper angle is to ask whether image-derived features predict or associate with HER2-related biological states, such as ERBB2 isoform/transcript context, signaling, or targetability. We should not claim that image AI detects HER2 isoforms without transcript-level or protein-level validation.

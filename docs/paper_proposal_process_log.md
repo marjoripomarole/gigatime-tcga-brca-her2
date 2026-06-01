@@ -1,5 +1,7 @@
 # Paper Proposal Process Log
 
+Status: Living history/process log. This is the document that records the sequence of decisions, analyses, and findings over time.
+
 Last updated: 2026-06-01
 
 This document keeps a running record of the research process for a future paper or grant proposal. It is written to preserve both the scientific reasoning and the concrete computational steps used in this TCGA-BRCA GigaTIME HER2 project.
@@ -647,6 +649,64 @@ Interpretation:
 - Full three-class prediction remained near chance across views.
 - The next useful analysis is visual inspection of cases whose predictions change between all-tissue/QC-cellular views and CK-enriched views.
 
+### 21. Expanded the Clinical HER2 Cohort to 20/20/20
+
+We then expanded the balanced clinical HER2 run from 30 slides to 60 slides:
+
+- 20 HER2-positive cases.
+- 20 HER2-low cases.
+- 20 HER2-zero cases.
+- Up to 256 random tissue tiles per slide.
+- 15,225 total GigaTIME tile predictions.
+- STAR-count RNA-seq expression downloaded for all 60 selected cases.
+
+New helper added:
+
+```bash
+conda run -n gigatime-tcga python scripts/download_selected_star_counts.py \
+  --star-counts data/tcga_brca_full_query/tcga_brca_star_counts_files.csv \
+  --cases data/tcga_brca/clinical_her2_cohort_expanded20_cases.csv \
+  --expression-out data/tcga_brca/erbb2_expression_expanded20.csv \
+  --status-out data/tcga_brca/clinical_her2_cohort_expanded20_star_counts_download_status.json
+```
+
+Main expanded-run outputs:
+
+- `docs/clinical_her2_expanded20_results.md`
+- `docs/clinical_her2_cohort_expanded20_selection.md`
+- `docs/clinical_her2_expanded20_gigatime_data_cleanup.md`
+- `docs/clinical_her2_expanded20_cleaned_classifier_comparison.md`
+- `results/gigatime_tcga_brca_clinical_her2_expanded20_tile256/`
+- `docs/assets/clinical_her2_expanded20_gigatime_cleanup/`
+- `docs/assets/clinical_her2_expanded20_cleaned_classifier/`
+
+Strongest updated finding:
+
+- The HER2-low versus HER2-zero image-derived signal persisted and became stronger after expansion.
+- Several HER2-low versus HER2-zero pairwise channel differences now pass within-view BH correction in all-tissue or QC-cellular views:
+  - `CD4`: q 0.0252 all tissue; q 0.0200 QC-cellular.
+  - `CD3`: q 0.0252 all tissue; q 0.0200 QC-cellular.
+  - `CD11c`: q 0.0252 all tissue; q 0.0206 QC-cellular.
+  - `CD68`: q 0.0326 all tissue; q 0.0320 QC-cellular.
+  - `PD-L1`: q 0.0320 in QC-cellular tissue.
+
+Expanded classifier result:
+
+| Input view | Best feature set | N | Balanced accuracy | Macro AUC |
+|---|---|---:|---:|---:|
+| All sampled tissue | Mean + fraction channels | 40 | 0.800 | 0.820 |
+| QC cellular tissue | Mean + fraction channels | 40 | 0.775 | 0.820 |
+| CK-enriched top 50% | Mean channels | 40 | 0.750 | 0.807 |
+| CK-enriched top 25% | Mean + fraction channels | 40 | 0.800 | 0.820 |
+
+Expanded interpretation:
+
+- The strongest current presentation result is now the expanded HER2-low versus HER2-zero signal, not only the original 30-slide pilot.
+- HER2-low often appears to be the lowest virtual immune/checkpoint group.
+- HER2-positive becomes highest for several broader virtual immune programs, so the three-group pattern is not simply "HER2-zero is highest for every immune marker."
+- RNA marker and RNA program validation remain weak, so the result is still hypothesis-generating and should be described as an image-derived HER2-state association, not clinical diagnosis.
+- GigaTIME/H&E still does not reliably classify HER2-positive disease; ERBB2 RNA performs better for that task, as expected.
+
 ## Initial Biological Findings From the ERBB2-Extreme Pilot
 
 The current processed dataset is too small for strong claims. The main result so far is that the workflow is feasible and produces interpretable tables and figures.
@@ -706,12 +766,13 @@ Using the implemented mapping above:
 | Current 40 ERBB2-extreme selected cases | 13 | 10 | 8 | 9 |
 | Current 12 GigaTIME-processed slides | 6 | 3 | 1 | 2 |
 | Current 30-slide clinical HER2 GigaTIME pilot | 10 | 10 | 10 | 0 |
+| Expanded 60-slide clinical HER2 GigaTIME run | 20 | 20 | 20 | 0 |
 
 Interpretation:
 
 - TCGA-BRCA appears useful for clinical HER2 grouping.
 - The 30-slide clinical HER2 pilot now supports a first balanced three-group comparison.
-- The next scientific step is to validate and expand this balanced clinical HER2 analysis rather than continuing only with ERBB2 RNA extremes.
+- The expanded 60-slide run strengthens the HER2-low versus HER2-zero image-signal argument, but still requires molecular, pathology, and external validation.
 
 ## Multiplex Immunofluorescence Comparison Question
 
@@ -736,7 +797,7 @@ Potential validation strategies:
 
 ### Analysis 1: Re-select Cases by Clinical HER2 Group
 
-This is now completed for a first balanced 10/10/10 clinical HER2 pilot. Instead of selecting only ERBB2-high and ERBB2-low cases, the workflow now creates a clinical HER2 cohort:
+This is now completed for both a first balanced 10/10/10 clinical HER2 pilot and an expanded balanced 20/20/20 run. Instead of selecting only ERBB2-high and ERBB2-low cases, the workflow now creates clinical HER2 cohorts:
 
 - HER2-positive cases.
 - HER2-low cases.
@@ -746,19 +807,19 @@ The selection balances slide availability and chooses one primary-tumor slide pe
 
 ### Analysis 2: Run GigaTIME on a Larger Clinical HER2 Cohort
 
-The first balanced 30-slide clinical HER2 pilot is now complete, but it is still small. The proposal should target a larger, balanced run.
+The first balanced 30-slide clinical HER2 pilot and the expanded balanced 60-slide clinical HER2 run are now complete. The proposal should now target validation rather than another simple expansion.
 
-Possible first target:
+Completed expanded run:
 
-- 30 HER2-positive slides.
-- 30 HER2-low slides.
-- 30 HER2-zero slides.
+- 20 HER2-positive slides.
+- 20 HER2-low slides.
+- 20 HER2-zero slides.
 
-The completed first balanced pilot used:
+Possible future target, only if time and compute permit:
 
-- 10 HER2-positive slides.
-- 10 HER2-low slides.
-- 10 HER2-zero slides.
+- Larger balanced cohort with more HER2-zero cases.
+- More complete whole-slide sampling.
+- External validation cohort with H&E plus real mIF, IHC/ISH, or treatment-response data.
 
 ### Analysis 3: Compare Virtual mIF Features Across Clinical HER2 Groups
 
@@ -876,14 +937,14 @@ This study would not claim that GigaTIME diagnoses HER2 status or detects HER2 i
 
 ## Current Limitations to State Clearly
 
-- The first clinical HER2 pilot has only 10 slides per group.
-- The first full clinical HER2 run used 64 random tissue tiles per slide; the 256-tile rerun improves sampling robustness but is still not exhaustive whole-slide analysis.
+- The project now includes an expanded 20/20/20 clinical HER2 run, but this is still small for a clinical model.
+- The first full clinical HER2 run used 64 random tissue tiles per slide; the 256-tile reruns improve sampling robustness but are still not exhaustive whole-slide analysis.
 - The earlier ERBB2 RNA-expression extreme comparison should not be treated as the clinical HER2 result.
 - Clinical HER2 fields in TCGA are incomplete for many cases.
 - TCGA clinical supplement files may contain missing, not evaluated, or inconsistent fields.
 - No matched real mIF validation data is currently present in this project.
 - GigaTIME predictions are research features, not clinical measurements.
-- The first classifier baseline is very small and should not be interpreted as diagnostic performance.
+- The classifier baselines should not be interpreted as diagnostic performance.
 - The current data do not prove HER2 isoform state, targetability, or therapy resistance. Those are future hypotheses requiring molecular, protein-level, and treatment-response validation.
 - Whole-slide sampling, tile quality, tumor purity, and batch/stain variation need stronger QC.
 
@@ -968,7 +1029,7 @@ Current key result files:
 
 ## Next Immediate Step
 
-The next step is not another download. The 30-slide clinical HER2 pilot, first 256-tile robustness check, broader RNA-program validation, first classifier baseline, pre-classifier GigaTIME cleanup, and cleaned-view classifier comparison are complete. The next scientific step is trustworthiness review of the cases driving model behavior:
+The next step is not another download. The 30-slide clinical HER2 pilot, 256-tile robustness check, broader RNA-program validation, first classifier baseline, pre-classifier GigaTIME cleanup, cleaned-view classifier comparison, and expanded 20/20/20 run are complete. The next scientific step is trustworthiness review of the cases driving model behavior:
 
 - Ask an advisor/pathologist to review whether the H&E regions driving high virtual CD68, PD-L1, and CD11c are biologically plausible.
 - Inspect cases whose predictions change between all-tissue/QC-cellular and CK-enriched feature views.

@@ -1,8 +1,10 @@
 # Current Pilot Run
 
+Status: Current project status summary. For the cleanest latest-results presentation, use `docs/clinical_her2_expanded20_results.md`; for the history, use `docs/paper_proposal_process_log.md`.
+
 ## Run Status
 
-The current workspace contains a completed TCGA-BRCA GigaTIME pilot on a balanced clinical HER2 cohort:
+The current workspace contains both the original 30-slide clinical HER2 pilot and the expanded 60-slide clinical HER2 run. The original pilot processed:
 
 - HER2-positive cases processed: 10
 - HER2-low cases processed: 10

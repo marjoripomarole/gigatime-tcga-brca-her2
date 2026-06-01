@@ -1,5 +1,7 @@
 # Clinical HER2 RNA Program Validation
 
+Status: Historical 30-slide RNA program validation report. For the latest expanded 60-slide interpretation, use `docs/clinical_her2_expanded20_results.md`; the expanded RNA program outputs are under `results/gigatime_tcga_brca_clinical_her2_expanded20_tile256/rna_program_validation/`.
+
 This document records the next validation step after the 256-tile clinical HER2 robustness run.
 
 ## Why This Was Done

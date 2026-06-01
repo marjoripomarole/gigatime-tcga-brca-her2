@@ -1,5 +1,7 @@
 # Advisor Brief: TCGA-BRCA GigaTIME HER2 Pilot
 
+Status: Current advisor-facing summary. For the complete documentation map, start with `docs/README.md`.
+
 ## Working Question
 
 Can the released GigaTIME model generate biologically interpretable virtual tumor immune microenvironment features from TCGA-BRCA H&E slides, and do those features vary across clinically defined HER2-positive, HER2-low, and HER2-zero breast cancers?
@@ -9,9 +11,10 @@ Can the released GigaTIME model generate biologically interpretable virtual tumo
 1. Query TCGA-BRCA diagnostic H&E slides, RNA-seq STAR-count files, and clinical HER2 supplement fields from GDC.
 2. Assign clinical HER2-positive, HER2-low, HER2-zero, or unknown labels using IHC/ISH fields.
 3. Select a balanced 30-case pilot: 10 HER2-positive, 10 HER2-low, and 10 HER2-zero.
-4. Run the official GigaTIME model on diagnostic slide tiles.
-5. Aggregate virtual mIF activations per slide for the GigaTIME channels.
-6. Compare virtual TIME markers across clinical HER2 groups and render virtual mIF figures for review.
+4. Expand to a balanced 60-case run: 20 HER2-positive, 20 HER2-low, and 20 HER2-zero.
+5. Run the official GigaTIME model on diagnostic slide tiles.
+6. Aggregate virtual mIF activations per slide for the GigaTIME channels.
+7. Compare virtual TIME markers across clinical HER2 groups and render virtual mIF figures for review.
 
 ## Current Full-Pilot Finding
 

@@ -1,5 +1,7 @@
 # Clinical HER2 GigaTIME Run
 
+Status: Historical 30-slide clinical HER2 run. For the latest expanded 60-slide result, use `docs/clinical_her2_expanded20_results.md`.
+
 This document records the selected clinical HER2-positive / HER2-low / HER2-zero GigaTIME pilot run.
 
 ## Run Status

@@ -1,5 +1,7 @@
 # Clinical HER2 GigaTIME Data Cleanup
 
+Status: Current expanded 60-slide cleanup report. Use this with `docs/clinical_her2_expanded20_results.md` for the latest tile-filtering interpretation.
+
 This cleanup step goes back before classifier training. It asks whether the GigaTIME input features should be aggregated from all sampled tissue tiles, or from cleaner tile subsets that are more cellular and more epithelial/tumor enriched.
 
 ## Cleanup Views

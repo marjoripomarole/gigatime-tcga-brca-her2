@@ -1,5 +1,7 @@
 # Clinical HER2 Classifier Baseline
 
+Status: Historical 30-slide classifier report. For the latest expanded 60-slide classifier summary, use `docs/clinical_her2_expanded20_results.md` and `docs/clinical_her2_expanded20_cleaned_classifier_comparison.md`.
+
 This document records the first diagnostic-model style analysis in the project. Until now, the project mostly compared group averages. This step asks a different question:
 
 > If we train a classifier from GigaTIME slide-level features, can it predict clinical HER2 labels for held-out slides?

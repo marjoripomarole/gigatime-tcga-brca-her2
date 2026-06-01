@@ -1,5 +1,7 @@
 # Plain-Language Methodology: TCGA-BRCA GigaTIME HER2 Pilot
 
+Status: Current plain-language explanation, updated through the expanded 60-slide clinical HER2 run.
+
 This document explains what has been done in this project so far for a reader who does not have a genetics, pathology, or computational biology background.
 
 The short version is: this project takes public breast cancer microscope images, runs an existing artificial intelligence model called GigaTIME on small pieces of those images, and compares the model's predicted immune-marker patterns across clinically defined HER2 groups.
@@ -376,6 +378,37 @@ The answer was mixed:
 
 In plain language: the current GigaTIME features may contain some signal for separating HER2-low from HER2-zero, but they are not yet reliable for clinical HER2 diagnosis.
 
+### Expanded 20/20/20 clinical HER2 run
+
+After the first classifier and cleanup analyses, the cohort was expanded from 30 slides to 60 slides:
+
+- 20 HER2-positive.
+- 20 HER2-low.
+- 20 HER2-zero.
+- Up to 256 tissue tiles per slide.
+- 15,225 total GigaTIME tile predictions.
+- Matched STAR-count RNA-seq expression downloaded for all 60 selected cases.
+
+This made the main finding stronger. In the expanded run, several HER2-low versus HER2-zero differences passed multiple-testing correction in all-tissue or QC-cellular views:
+
+- `CD3`
+- `CD4`
+- `CD11c`
+- `CD68`
+- `PD-L1` in the QC-cellular view
+
+The HER2-low versus HER2-zero classifier also held up:
+
+- All sampled tissue: balanced accuracy 0.800, macro AUC 0.820.
+- QC-cellular tissue: balanced accuracy 0.775, macro AUC 0.820.
+- CK-enriched top 25%: balanced accuracy 0.800, macro AUC 0.820.
+
+Plain-language interpretation:
+
+> The larger run supports the idea that HER2-low and HER2-zero tumors may have different image-derived tissue-context patterns. The result is stronger than before, but it is still not a clinical diagnostic model and still needs biological validation.
+
+The expanded run also changed the three-group story. HER2-low often looked like the lowest immune/checkpoint group, while HER2-positive became highest for several broader virtual immune programs. So the result should not be simplified to "HER2-zero is always highest."
+
 ## 8. What the Output Tables Mean
 
 ### `slide_scores.csv`
@@ -459,9 +492,9 @@ These images are still virtual predictions, not real mIF measurements.
 
 ## 10. What This Study Has Not Done Yet
 
-The current pilot has not yet:
+The current project has not yet:
 
-- Processed a large clinical HER2 cohort beyond the 30 selected cases.
+- Processed a large external validation cohort beyond the local 60-slide TCGA-BRCA expanded run.
 - Used more exhaustive whole-slide sampling.
 - Performed formal tissue quality control on every sampled tile.
 - Validated GigaTIME predictions against real multiplex immunofluorescence staining in these TCGA slides.
@@ -479,6 +512,7 @@ This pilot is useful because it proves several practical pieces:
 - TCGA-BRCA H&E slides can be queried and downloaded through GDC.
 - TCGA-BRCA clinical HER2 IHC/ISH fields can be used to create HER2-positive, HER2-low, and HER2-zero groups.
 - A balanced 10/10/10 clinical HER2 pilot cohort can be selected reproducibly.
+- A balanced 20/20/20 expanded clinical HER2 run can be selected, downloaded, processed, and analyzed reproducibly.
 - The released GigaTIME model can be run on TCGA-BRCA pathology tiles.
 - The GigaTIME outputs can be aggregated into slide-level marker features.
 - Those marker features can be compared across clinical HER2 groups.
@@ -492,13 +526,13 @@ The safest interpretation is:
 
 This is an exploratory feasibility run showing that an existing H&E-to-virtual-mIF model can be applied to TCGA-BRCA breast cancer slides and connected to clinical HER2 labels.
 
-The current 30-slide result is too small for strong biological conclusions. It is useful because it identifies a specific hypothesis: HER2-zero tumors may show higher GigaTIME-predicted immune/checkpoint signal than HER2-low tumors in this selected TCGA-BRCA pilot.
+The current expanded 60-slide result is still too small for strong biological conclusions, but it is stronger than the first 30-slide pilot. It supports a specific hypothesis: HER2-low and HER2-zero tumors may differ in image-derived tissue-context and immune/checkpoint patterns.
 
-The first RNA-seq validation check did not strongly support that signal. GigaTIME `CD68`, `PD-L1`, and `CD11c` predictions did not show strong positive correlations with matched RNA marker signatures. This does not automatically invalidate the model, but it means the project should be careful and should not claim that the virtual mIF signal has been validated.
+RNA-seq validation still did not strongly support that signal. GigaTIME virtual channel predictions did not show strong positive correlations with matched RNA marker signatures, and broader RNA programs did not confirm the virtual immune/checkpoint pattern. This does not automatically invalidate the model, but it means the project should be careful and should not claim that the virtual mIF signal has been validated.
 
 The first visual QC check looked at the H&E tiles driving high virtual `CD68`, `PD-L1`, and `CD11c` predictions. Those tiles contained real cellular tissue rather than obvious blank background. That supports continuing the analysis, but it still does not prove that the virtual markers are biologically correct.
 
-The 256-tile rerun suggests the pattern remains when more tissue tiles are sampled. The next scientific step is to test whether the pattern remains and becomes more trustworthy when:
+The 256-tile rerun and expanded 20/20/20 run suggest the HER2-low versus HER2-zero pattern remains when more tissue tiles and more cases are included. The next scientific step is to test whether the pattern becomes more trustworthy when:
 
 - Even more tiles per slide are sampled or more complete whole-slide coverage is used.
 - More cases are included if reliable HER2-zero cases are available.

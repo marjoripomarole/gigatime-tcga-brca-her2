@@ -1,5 +1,7 @@
 # Cleaned GigaTIME HER2 Classifier Comparison
 
+Status: Historical 30-slide cleaned classifier report. For the latest expanded 60-slide cleaned classifier report, use `docs/clinical_her2_expanded20_cleaned_classifier_comparison.md`.
+
 This analysis reruns the slide-level HER2 classifier after cleaning the GigaTIME tile inputs. It compares all sampled tissue against cellular and virtual CK-enriched feature views.
 
 Every prediction is leave-one-out cross-validated. This remains a small 30-case pilot, not a clinical model.

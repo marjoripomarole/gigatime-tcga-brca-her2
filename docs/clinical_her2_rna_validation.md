@@ -1,5 +1,7 @@
 # Clinical HER2 RNA Validation
 
+Status: Historical 30-slide marker-level RNA validation report. For the latest expanded 60-slide interpretation, use `docs/clinical_her2_expanded20_results.md`; the expanded RNA validation outputs are under `results/gigatime_tcga_brca_clinical_her2_expanded20_tile256/rna_validation/`.
+
 This document records the first indirect validation check for the 30-slide clinical HER2 GigaTIME pilot.
 
 ## Why This Was Done

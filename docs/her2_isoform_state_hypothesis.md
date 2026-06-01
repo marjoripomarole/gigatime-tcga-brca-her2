@@ -1,5 +1,7 @@
 # HER2 Isoform and State Hypothesis
 
+Status: Current hypothesis/framing document. This is not a results report; it defines careful proposal language and future validation needs.
+
 ## Why This Is a Stronger Scientific Angle
 
 The project should not be framed only as "can H&E predict HER2 status?" That is an important diagnostic question, but it is not the most interesting biology question.
@@ -42,13 +44,13 @@ The core distinction is important: H&E and virtual mIF predictions can generate 
 
 The current pilot supports a cautious starting point:
 
-- There is a reproducible image-derived signal separating HER2-low and HER2-zero cases in this 30-slide pilot.
-- The strongest signal appears in GigaTIME immune/checkpoint and myeloid-associated channels such as `CD68`, `PD-L1`, and `CD11c`.
-- The signal persists after cellular-tissue filtering, arguing against blank/background tiles as the only explanation.
-- The signal weakens when focusing on high-`CK` epithelial-enriched tiles, suggesting the current signal may depend on broader tissue or microenvironment context rather than pure tumor epithelial HER2 biology.
+- There is a reproducible image-derived signal separating HER2-low and HER2-zero cases, first seen in the 30-slide pilot and strengthened in the expanded 60-slide 20/20/20 run.
+- In the expanded run, several HER2-low versus HER2-zero virtual immune/myeloid/checkpoint channel differences pass within-view BH correction, especially `CD3`, `CD4`, `CD11c`, and `CD68`; `PD-L1` passes in the QC-cellular view.
+- The HER2-low versus HER2-zero classifier remained around balanced accuracy 0.800 in the expanded 40-case binary comparison.
+- The three-group pattern is nuanced: HER2-low often appears lowest, while HER2-positive becomes highest for several broader virtual immune programs.
 - HER2-positive versus HER2-negative classification remains weak, so the current pipeline does not reliably predict clinical HER2-positive disease.
 
-This means the current study is best interpreted as evidence that image-derived tissue context may contain information related to the HER2-low versus HER2-zero boundary. It does not yet show that the images capture HER2 isoforms.
+This means the current study is best interpreted as evidence that image-derived tissue context may contain information related to the HER2-low versus HER2-zero boundary. It does not yet show that the images capture HER2 isoforms, and RNA validation remains weak.
 
 ## What Validation Is Needed
 
@@ -75,4 +77,3 @@ TCGA-BRCA is useful for histology, clinical HER2 annotation, and RNA context, bu
 The safest paper-proposal claim is:
 
 This study evaluates whether GigaTIME-derived image features from breast cancer H&E slides predict or associate with HER2-related biological states, including the HER2-low versus HER2-zero boundary, and whether those image-derived states can be validated against molecular or protein-level evidence.
-

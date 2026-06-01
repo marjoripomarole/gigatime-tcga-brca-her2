@@ -1,5 +1,7 @@
 # Expanded 20/20/20 Clinical HER2 Results
 
+Status: Current best presentation summary. New researchers should read this first, then `docs/README.md` for the full document map.
+
 ## What Was Run
 
 We expanded the TCGA-BRCA clinical HER2 GigaTIME pilot from 30 slides to 60 slides:
