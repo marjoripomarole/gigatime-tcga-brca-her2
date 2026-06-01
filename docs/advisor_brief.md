@@ -37,6 +37,12 @@ This did not strongly confirm the virtual immune-channel signal:
 - `CD68`, `PD-L1`, and `CD11c`, the main virtual channels driving the HER2-zero versus HER2-low signal, did not show strong positive RNA-signature correlations.
 - This means the current result should remain hypothesis-generating until visual QC, more tile sampling, and additional validation are done.
 
+## Visual QC Update
+
+We rendered H&E-versus-virtual-mIF QC panels for the top `CD68` + `PD-L1` + `CD11c` case in each HER2 group.
+
+The high-scoring tiles were real tissue-containing, cellular H&E regions rather than obvious blank background. That supports continuing the analysis. However, the high-signal tiles were not visually unique to HER2-zero; the selected HER2-positive case also had strong high-signal tiles. The result remains a slide-level pilot trend, not a clean single-case visual phenotype.
+
 ## Why This Is a Good First Step
 
 - It is replication-first: the model is not retrained, only applied to public TCGA-BRCA data.
@@ -50,6 +56,7 @@ This did not strongly confirm the virtual immune-channel signal:
 - The first balanced clinical HER2 run is still small: 10 cases per group.
 - The 64-tile-per-slide run is a practical pilot, not a final whole-slide sampling strategy.
 - Bulk RNA-seq is an indirect validation layer and did not strongly validate the current GigaTIME immune-channel pattern.
+- Visual QC supports that the signal is not just blank background, but it is not biological validation.
 - TCGA slide quality, tissue sampling, and tumor purity need QC before strong biological claims.
 - GigaTIME is research-only and not a clinical HER2 classifier.
 - The virtual mIF channel images are GigaTIME predictions from H&E tiles, not real multiplex immunofluorescence measurements from TCGA.

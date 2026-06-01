@@ -1,0 +1,7 @@
+case_submitter_id,clinical_her2_group,image_type,path
+TCGA-A2-A0EQ,HER2-positive,he_vs_virtual_mif_qc,docs/assets/clinical_her2_visual_qc/her2_positive_TCGA-A2-A0EQ_he_vs_virtual_mif_qc.png
+TCGA-A2-A0EQ,HER2-positive,sampled_tile_overlay,docs/assets/clinical_her2_visual_qc/her2_positive_TCGA-A2-A0EQ_sampled_tile_overlay.png
+TCGA-A2-A04Q,HER2-low,he_vs_virtual_mif_qc,docs/assets/clinical_her2_visual_qc/her2_low_TCGA-A2-A04Q_he_vs_virtual_mif_qc.png
+TCGA-A2-A04Q,HER2-low,sampled_tile_overlay,docs/assets/clinical_her2_visual_qc/her2_low_TCGA-A2-A04Q_sampled_tile_overlay.png
+TCGA-A2-A0T2,HER2-zero,he_vs_virtual_mif_qc,docs/assets/clinical_her2_visual_qc/her2_zero_TCGA-A2-A0T2_he_vs_virtual_mif_qc.png
+TCGA-A2-A0T2,HER2-zero,sampled_tile_overlay,docs/assets/clinical_her2_visual_qc/her2_zero_TCGA-A2-A0T2_sampled_tile_overlay.png

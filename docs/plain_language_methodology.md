@@ -447,6 +447,8 @@ The current 30-slide result is too small for strong biological conclusions. It i
 
 The first RNA-seq validation check did not strongly support that signal. GigaTIME `CD68`, `PD-L1`, and `CD11c` predictions did not show strong positive correlations with matched RNA marker signatures. This does not automatically invalidate the model, but it means the project should be careful and should not claim that the virtual mIF signal has been validated.
 
+The first visual QC check looked at the H&E tiles driving high virtual `CD68`, `PD-L1`, and `CD11c` predictions. Those tiles contained real cellular tissue rather than obvious blank background. That supports continuing the analysis, but it still does not prove that the virtual markers are biologically correct.
+
 The next scientific step is to test whether this pattern remains when:
 
 - More tiles per slide are sampled.
@@ -466,6 +468,7 @@ scripts/download_clinical_her2_cohort_slides.py
 scripts/run_gigatime_tcga_brca.py
 scripts/summarize_clinical_her2_gigatime.py
 scripts/render_he_slide_images.py
+scripts/render_clinical_her2_visual_qc.py
 scripts/render_virtual_mif_channel_images.py
 scripts/render_virtual_mif_composites.py
 ```

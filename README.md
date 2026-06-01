@@ -17,12 +17,14 @@ The goal is to generate virtual multiplex immunofluorescence (mIF) features from
 - `scripts/validate_gigatime_with_rna_signatures.py`: compares GigaTIME virtual channels with matched RNA-seq marker signatures as an indirect validation check.
 - `scripts/render_virtual_mif_channel_images.py`: renders all-channel virtual mIF figures from GigaTIME tile and slide predictions.
 - `scripts/render_virtual_mif_composites.py`: reruns GigaTIME on selected tiles and renders fluorescence-style virtual mIF composites from the full predicted channel maps.
+- `scripts/render_clinical_her2_visual_qc.py`: renders clinical HER2 visual QC panels for cases driving high virtual `CD68`/`PD-L1`/`CD11c` signal.
 - `docs/virtual_mif_channel_outputs.md`: explains the generated virtual mIF channel images and how to interpret them.
 - `docs/plain_language_methodology.md`: detailed non-specialist explanation of the study background, methodology, outputs, and current limitations.
 - `docs/paper_proposal_process_log.md`: living process log for turning the pilot into a paper or grant proposal.
 - `docs/clinical_her2_cohort_selection.md`: selected 30-case clinical HER2 pilot cohort and selection counts.
 - `docs/clinical_her2_gigatime_run.md`: selected-cohort GigaTIME run status and full 30-slide clinical HER2 summary.
 - `docs/clinical_her2_rna_validation.md`: first RNA-seq validation check for the clinical HER2 GigaTIME pilot.
+- `docs/clinical_her2_visual_qc.md`: first visual/spatial QC pass for the clinical HER2 virtual immune-channel signal.
 - `docs/advisor_brief.md`: concise project framing and discussion points.
 - `docs/current_pilot_run.md`: current two-case run status and advisor-facing caveats.
 - `configs/tcga_brca_her2.yaml`: default paths and pilot settings.
@@ -219,6 +221,14 @@ conda run -n gigatime-tcga python scripts/render_virtual_mif_composites.py
 
 This writes H&E-versus-virtual-mIF panels and marker-composite montages to `docs/assets/virtual_mif_composites/`. These are still GigaTIME predictions, not experimental mIF data.
 
+To render the clinical HER2 visual QC panels for cases driving high virtual `CD68`, `PD-L1`, and `CD11c`:
+
+```bash
+conda run -n gigatime-tcga python scripts/render_clinical_her2_visual_qc.py
+```
+
+This writes tracked QC panels and selected-case tables to `docs/assets/clinical_her2_visual_qc/`.
+
 ## Notes for the Advisor Discussion
 
 - HER2 is represented here by `ERBB2` RNA expression from TCGA-BRCA STAR-count files.
@@ -227,3 +237,4 @@ This writes H&E-versus-virtual-mIF panels and marker-composite montages to `docs
 - The initial run should be treated as exploratory until tissue QC, slide-level aggregation, and HER2 clinical annotations are reviewed.
 - The current clinical HER2 pilot has processed 30 selected slides: 10 HER2-positive, 10 HER2-low, and 10 HER2-zero. The strongest pilot signal is higher GigaTIME-predicted CD68, PD-L1, and CD11c in HER2-zero versus HER2-low, but these are hypothesis-generating and not FDR-significant after pairwise correction.
 - The first RNA-seq validation check did not strongly confirm the virtual immune-channel signal; correlations between matched RNA marker signatures and GigaTIME channels were weak and not FDR-significant.
+- The first visual QC pass found that high virtual CD68/PD-L1/CD11c tiles were tissue-containing and cellular rather than obvious blank background, but this still does not validate the virtual marker biology.

@@ -348,6 +348,43 @@ Interpretation:
 - This does not prove the virtual signal is wrong, because bulk RNA-seq and H&E tile-level virtual mIF measure different tissue layers.
 - The result raises the bar for the next step: visual QC, more tile sampling per slide, and stronger orthogonal validation are needed before making biological claims.
 
+### 14. Rendered Visual QC Panels for High Virtual Immune-Channel Cases
+
+The first visual/spatial QC pass selected the top case from each clinical HER2 group by combined GigaTIME signal:
+
+```text
+mean_CD68 + mean_PD-L1 + mean_CD11c
+```
+
+Command:
+
+```bash
+conda run -n gigatime-tcga python scripts/render_clinical_her2_visual_qc.py
+```
+
+Selected cases:
+
+| Clinical HER2 group | Selected case | Combined signal | mean CD68 | mean PD-L1 | mean CD11c |
+|---|---|---:|---:|---:|---:|
+| HER2-positive | TCGA-A2-A0EQ | 0.115 | 0.029 | 0.072 | 0.014 |
+| HER2-low | TCGA-A2-A04Q | 0.086 | 0.018 | 0.058 | 0.010 |
+| HER2-zero | TCGA-A2-A0T2 | 0.126 | 0.037 | 0.069 | 0.021 |
+
+Tracked outputs:
+
+- `docs/clinical_her2_visual_qc.md`
+- `docs/assets/clinical_her2_visual_qc/clinical_her2_visual_qc_selected_cases.csv`
+- `docs/assets/clinical_her2_visual_qc/clinical_her2_visual_qc_manifest.csv`
+- `docs/assets/clinical_her2_visual_qc/*_he_vs_virtual_mif_qc.png`
+- `docs/assets/clinical_her2_visual_qc/*_sampled_tile_overlay.png`
+
+Visual QC result:
+
+- The high-scoring tiles were tissue-containing and cellular rather than obvious blank background.
+- The HER2-zero selected case had the highest combined slide-level signal among the selected group representatives.
+- The selected HER2-positive case also had visually plausible high-signal tiles, so the pattern is not unique to HER2-zero at the tile level.
+- This supports continued investigation but does not validate the virtual marker biology.
+
 See `docs/clinical_her2_gigatime_run.md` for the exact commands, local output paths, and current pilot table.
 
 ## Initial Biological Findings From the ERBB2-Extreme Pilot
@@ -559,6 +596,7 @@ Current workflow scripts:
 - `scripts/summarize_her2_gigatime.py`
 - `scripts/summarize_clinical_her2_gigatime.py`
 - `scripts/validate_gigatime_with_rna_signatures.py`
+- `scripts/render_clinical_her2_visual_qc.py`
 - `scripts/render_he_slide_images.py`
 - `scripts/render_virtual_mif_channel_images.py`
 - `scripts/render_virtual_mif_composites.py`
@@ -574,6 +612,7 @@ Current documentation:
 - `docs/clinical_her2_cohort_selection.md`
 - `docs/clinical_her2_gigatime_run.md`
 - `docs/clinical_her2_rna_validation.md`
+- `docs/clinical_her2_visual_qc.md`
 
 Current key result files:
 
@@ -593,6 +632,7 @@ Current key result files:
 - `results/gigatime_tcga_brca_clinical_her2/slide_scores.csv`
 - `results/gigatime_tcga_brca_clinical_her2/clinical_summary/clinical_her2_summary.md`
 - `results/gigatime_tcga_brca_clinical_her2/rna_validation/gigatime_rna_signature_correlations.csv`
+- `docs/assets/clinical_her2_visual_qc/clinical_her2_visual_qc_selected_cases.csv`
 
 ## Next Immediate Step
 
@@ -600,5 +640,6 @@ The next step is not another download. The 30-slide clinical HER2 pilot is compl
 
 - Rerun the 30 selected slides with more tiles per slide.
 - Test whether HER2-zero remains higher than HER2-low for CD68, PD-L1, and CD11c.
-- Create a small visual QC set showing source H&E tiles beside virtual mIF outputs for representative HER2-positive, HER2-low, and HER2-zero cases.
-- Prioritize visual QC for cases driving high virtual CD68, PD-L1, and CD11c predictions because the first RNA validation check did not strongly confirm those signals.
+- Rerun the 30 selected slides with more tiles per slide, such as 256 or 512.
+- Re-run the clinical HER2 summary, RNA validation, and visual QC after denser tile sampling.
+- Ask an advisor/pathologist to review whether the H&E regions driving high virtual CD68, PD-L1, and CD11c are biologically plausible.

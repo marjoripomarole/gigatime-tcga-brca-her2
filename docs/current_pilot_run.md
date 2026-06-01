@@ -29,6 +29,8 @@ The HER2 group labels come from `data/tcga_brca/clinical_her2_labels.csv`, which
 - `results/gigatime_tcga_brca_clinical_her2/clinical_summary/*.png`
 - `results/gigatime_tcga_brca_clinical_her2/rna_validation/gigatime_rna_signature_correlations.csv`
 - `results/gigatime_tcga_brca_clinical_her2/rna_validation/rna_validation_summary.md`
+- `docs/assets/clinical_her2_visual_qc/clinical_her2_visual_qc_selected_cases.csv`
+- `docs/assets/clinical_her2_visual_qc/*_he_vs_virtual_mif_qc.png`
 
 The earlier ERBB2-high versus ERBB2-low pilot outputs are still present under `results/gigatime_tcga_brca_extremes/`, and the documentation-facing virtual mIF images are still under:
 
@@ -60,6 +62,18 @@ Result:
 - `CD68`, `PD-L1`, and `CD11c` did not show strong positive correlations with their matching RNA signatures.
 
 Interpretation: the clinical HER2 virtual immune signal is interesting, but not yet validated. It needs visual QC, more tiles per slide, and stronger orthogonal validation before making biological claims.
+
+## Visual QC Check
+
+The first visual QC pass selected the top `CD68` + `PD-L1` + `CD11c` case from each HER2 group:
+
+| Clinical HER2 group | Selected case | Combined signal |
+|---|---|---:|
+| HER2-positive | TCGA-A2-A0EQ | 0.115 |
+| HER2-low | TCGA-A2-A04Q | 0.086 |
+| HER2-zero | TCGA-A2-A0T2 | 0.126 |
+
+The high-scoring tiles were tissue-containing and cellular rather than obvious blank regions. This supports continued investigation, but it does not validate the virtual marker biology. The selected HER2-positive case also had visually plausible high-signal tiles, so the current result should be framed as a slide-level pilot trend rather than a clean visual separation.
 
 ## Commands
 
