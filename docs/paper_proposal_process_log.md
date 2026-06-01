@@ -190,6 +190,42 @@ Main local outputs:
 
 The generated label table includes one row per TCGA-BRCA clinical case, the raw HER2 IHC/ISH values, the assigned clinical HER2 group, and the exact rule used to assign that group.
 
+### 10. Selected a Balanced Clinical HER2 Pilot Cohort
+
+The script `scripts/select_clinical_her2_cohort.py` now joins the clinical HER2 label table with ERBB2 expression and slide metadata, then selects a deterministic balanced cohort for the next GigaTIME run.
+
+Command:
+
+```bash
+conda run -n gigatime-tcga python scripts/select_clinical_her2_cohort.py
+```
+
+Main local outputs:
+
+- `data/tcga_brca/clinical_her2_cohort_cases.csv`
+- `data/tcga_brca/clinical_her2_cohort_slides_files.csv`
+- `data/tcga_brca/clinical_her2_cohort_slide_manifest.tsv`
+- `data/tcga_brca/clinical_her2_cohort_summary.json`
+- `docs/clinical_her2_cohort_selection.md`
+
+Selection priority:
+
+- Clinical HER2 group must be one of HER2-positive, HER2-low, or HER2-zero.
+- Direct clinical HER2 labels are preferred over inferred labels.
+- Already-downloaded slides are preferred.
+- Smaller slide files are preferred to make the next pilot more practical.
+- Case IDs are used for deterministic tie-breaking.
+
+Selected cohort:
+
+| Cohort group | Selected cases | Already downloaded slides |
+|---|---:|---:|
+| HER2-positive | 10 | 4 |
+| HER2-low | 10 | 3 |
+| HER2-zero | 10 | 1 |
+
+This gives the first clean 30-case clinical HER2 pilot cohort for running GigaTIME across HER2-positive, HER2-low, and HER2-zero disease.
+
 ## Initial Biological Findings From the ERBB2-Extreme Pilot
 
 The current processed dataset is too small for strong claims. The main result so far is that the workflow is feasible and produces interpretable tables and figures.
@@ -278,13 +314,13 @@ Potential validation strategies:
 
 ### Analysis 1: Re-select Cases by Clinical HER2 Group
 
-Instead of selecting only ERBB2-high and ERBB2-low cases, create a clinical HER2 cohort:
+This is now completed for a first balanced 10/10/10 clinical HER2 pilot. Instead of selecting only ERBB2-high and ERBB2-low cases, the workflow now creates a clinical HER2 cohort:
 
 - HER2-positive cases.
 - HER2-low cases.
 - HER2-zero cases.
 
-The selection should balance slide availability and choose one diagnostic tumor slide per case whenever possible.
+The selection balances slide availability and chooses one primary-tumor slide per case whenever possible.
 
 ### Analysis 2: Run GigaTIME on a Larger Clinical HER2 Cohort
 
@@ -388,6 +424,7 @@ Current workflow scripts:
 
 - `scripts/gdc_query_tcga_brca.py`
 - `scripts/build_tcga_brca_clinical_her2_labels.py`
+- `scripts/select_clinical_her2_cohort.py`
 - `scripts/select_her2_extremes.py`
 - `scripts/run_gigatime_tcga_brca.py`
 - `scripts/summarize_her2_gigatime.py`
@@ -402,12 +439,18 @@ Current documentation:
 - `docs/advisor_brief.md`
 - `docs/plain_language_methodology.md`
 - `docs/virtual_mif_channel_outputs.md`
+- `docs/paper_proposal_process_log.md`
+- `docs/clinical_her2_cohort_selection.md`
 
 Current key result files:
 
 - `data/tcga_brca/erbb2_expression.csv`
 - `data/tcga_brca/clinical_her2_labels.csv`
 - `data/tcga_brca/clinical_her2_labels_metadata.json`
+- `data/tcga_brca/clinical_her2_cohort_cases.csv`
+- `data/tcga_brca/clinical_her2_cohort_slides_files.csv`
+- `data/tcga_brca/clinical_her2_cohort_slide_manifest.tsv`
+- `data/tcga_brca/clinical_her2_cohort_summary.json`
 - `data/tcga_brca/her2_extreme_cases.csv`
 - `results/gigatime_tcga_brca_extremes/slide_scores.csv`
 - `results/gigatime_tcga_brca_extremes/tile_scores.csv`
@@ -416,10 +459,10 @@ Current key result files:
 
 ## Next Immediate Step
 
-Use the generated clinical HER2 label table to select a balanced GigaTIME cohort:
+Use the generated clinical HER2 cohort manifest to download the missing selected slides and run GigaTIME on the 30-case cohort:
 
-- HER2-positive slides,
-- HER2-low slides,
-- HER2-zero slides.
+- 10 HER2-positive cases,
+- 10 HER2-low cases,
+- 10 HER2-zero cases.
 
-The current local metadata/expression subset has 13 HER2-positive, 35 HER2-low, and 10 HER2-zero cases before additional downloads. The most practical next run is a balanced 10/10/10 clinical HER2 pilot if diagnostic slide files can be downloaded reliably for those cases.
+The current selected cohort already has 8 slides downloaded locally and 22 slides still needing download. Once those missing slides are downloaded, run GigaTIME on this clinical HER2 cohort and summarize the virtual mIF channels by clinical group.
