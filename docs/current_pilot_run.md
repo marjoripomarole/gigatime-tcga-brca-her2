@@ -114,6 +114,46 @@ Best GigaTIME/H&E results:
 
 Interpretation: the classifier result is promising only for HER2-low versus HER2-zero in this tiny pilot. It is not reliable for HER2-positive detection or full three-class diagnosis.
 
+## Pre-Classifier GigaTIME Data Cleanup
+
+We then returned to the tile-level GigaTIME data to create cleaner feature views before retraining the classifier. The goal was to test whether the signal depends on all sampled tissue, cellular tissue, or more tumor/epithelial-enriched tiles.
+
+Cleanup views:
+
+| Cleanup view | Median retained tiles | Median retained fraction | Median DAPI | Median CK |
+|---|---:|---:|---:|---:|
+| All sampled tissue | 256.0 | 1.000 | 0.324 | 0.231 |
+| QC cellular tissue | 190.5 | 0.744 | 0.360 | 0.249 |
+| CK-enriched top 50% | 96.0 | 0.375 | 0.450 | 0.359 |
+| CK-enriched top 25% | 48.0 | 0.188 | 0.493 | 0.431 |
+
+Main cleanup interpretation:
+
+- The HER2-zero > HER2-low CD68/PD-L1/CD11c signal persisted after cellular-tissue filtering.
+- The signal weakened under stricter CK-enriched tile selection, especially in the top 25% CK view.
+- This suggests the original GigaTIME signal is not simply blank-tile artifact, but it may depend partly on broader tissue context rather than only tumor-rich epithelial regions.
+
+See `docs/clinical_her2_gigatime_data_cleanup.md`.
+
+## Cleaned-View Classifier Comparison
+
+The classifier was rerun separately on each cleaned GigaTIME feature view.
+
+HER2-low versus HER2-zero result:
+
+| Cleanup view | Best feature set | Accuracy | Balanced accuracy | Macro AUC |
+|---|---|---:|---:|---:|
+| All sampled tissue | Mean + fraction channels | 0.800 | 0.800 | 0.870 |
+| QC cellular tissue | Mean + fraction channels | 0.800 | 0.800 | 0.900 |
+| CK-enriched top 50% | Interpretable means | 0.650 | 0.650 | 0.670 |
+| CK-enriched top 25% | Interpretable means | 0.650 | 0.650 | 0.630 |
+
+Interpretation: cellular-tissue cleanup preserved the HER2-low versus HER2-zero classifier signal, which argues against blank/background tissue as the sole explanation. The signal weakened in CK-enriched views, suggesting the current GigaTIME signal may depend more on broader tissue or microenvironment context than on a purely epithelial tumor-cell HER2 phenotype.
+
+HER2-positive versus HER2-negative performance remained weak. CK-enriched top 25% reached balanced accuracy 0.550, but sensitivity was only 0.200, so this is not useful for clinical HER2-positive detection.
+
+See `docs/clinical_her2_cleaned_classifier_comparison.md`.
+
 ## Visual QC Check
 
 The first visual QC pass selected the top `CD68` + `PD-L1` + `CD11c` case from each HER2 group:

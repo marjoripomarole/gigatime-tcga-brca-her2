@@ -560,6 +560,93 @@ Interpretation:
 - Full three-class clinical HER2 prediction is at chance in this tiny pilot.
 - This is a feasibility and failure-mode analysis, not a diagnostic model.
 
+### 19. Returned to Pre-Classifier GigaTIME Data Cleanup
+
+After the first classifier baseline, we returned to the GigaTIME tile-level data to ask whether the input features were too broad. The classifier baseline averaged all sampled tissue tiles, which can mix tumor, stroma, immune regions, normal tissue, and other non-tumor context. Because HER2 is clinically assessed in tumor cells, the next cleanup step created more biologically focused feature views before retraining any classifier.
+
+Command:
+
+```bash
+conda run -n gigatime-tcga python scripts/cleanup_gigatime_tile_features.py
+```
+
+Main local outputs:
+
+- `results/gigatime_tcga_brca_clinical_her2_tile256/gigatime_cleanup/tile_qc_scores.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/gigatime_cleanup/cleaned_slide_features.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/gigatime_cleanup/filter_retention_summary.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/gigatime_cleanup/cleanup_channel_summary.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/gigatime_cleanup/cleanup_pairwise_tests.csv`
+- `docs/clinical_her2_gigatime_data_cleanup.md`
+- `docs/assets/clinical_her2_gigatime_cleanup/`
+
+Cleanup views:
+
+- All sampled tissue tiles from the original 256-tile run.
+- QC cellular tissue: tissue fraction at least 0.70 and virtual DAPI mean at least 0.05.
+- CK-enriched top 50%: the top half of virtual CK tiles within each slide after QC.
+- CK-enriched top 25%: the top quarter of virtual CK tiles within each slide after QC.
+
+Important caveat: virtual DAPI and virtual CK are still GigaTIME predictions from H&E, not real stains or pathologist-annotated tumor masks. These views are tumor-enriched research feature views, not confirmed tumor regions.
+
+Tile retention:
+
+| Cleanup view | Median retained tiles | Median retained fraction | Median DAPI | Median CK |
+|---|---:|---:|---:|---:|
+| All sampled tissue | 256.0 | 1.000 | 0.324 | 0.231 |
+| QC cellular tissue | 190.5 | 0.744 | 0.360 | 0.249 |
+| CK-enriched top 50% | 96.0 | 0.375 | 0.450 | 0.359 |
+| CK-enriched top 25% | 48.0 | 0.188 | 0.493 | 0.431 |
+
+Main result:
+
+- The HER2-zero greater than HER2-low CD68/PD-L1/CD11c signal persisted after cellular-tissue QC and became slightly stronger by mean difference.
+- The same signal weakened under stricter CK-enriched tile selection, especially in the top 25% CK view.
+- This suggests the original signal is not only blank-tile artifact, but it may depend partly on broader tissue context rather than only tumor-rich epithelial regions.
+
+Interpretation:
+
+- The cleaned feature tables are now ready for a second classifier run.
+- If the HER2-low versus HER2-zero classifier remains strong using QC cellular tissue but weakens with CK-enriched views, that would argue the model is learning tissue-context or microenvironment signal rather than a tumor-cell HER2 phenotype.
+- If CK-enriched views improve classification, that would support the idea that tumor-region GigaTIME features are more relevant for HER2 prediction.
+
+### 20. Reran HER2 Classifiers Across Cleaned GigaTIME Views
+
+The second classifier step used the cleaned feature views from step 19 and reran the same leave-one-out classifier evaluation separately for each view.
+
+Command:
+
+```bash
+conda run -n gigatime-tcga python scripts/train_her2_cleaned_classifier_comparison.py
+```
+
+Main local outputs:
+
+- `results/gigatime_tcga_brca_clinical_her2_tile256/cleaned_classifier_comparison/cleaned_classifier_predictions.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/cleaned_classifier_comparison/cleaned_classifier_metrics.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/cleaned_classifier_comparison/cleaned_classifier_confusion_matrices.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/cleaned_classifier_comparison/cleaned_classifier_best_h_e_metrics.csv`
+- `docs/clinical_her2_cleaned_classifier_comparison.md`
+- `docs/assets/clinical_her2_cleaned_classifier/`
+
+HER2-low versus HER2-zero result:
+
+| Cleanup view | Best feature set | Accuracy | Balanced accuracy | Macro AUC |
+|---|---|---:|---:|---:|
+| All sampled tissue | Mean + fraction channels | 0.800 | 0.800 | 0.870 |
+| QC cellular tissue | Mean + fraction channels | 0.800 | 0.800 | 0.900 |
+| CK-enriched top 50% | Interpretable means | 0.650 | 0.650 | 0.670 |
+| CK-enriched top 25% | Interpretable means | 0.650 | 0.650 | 0.630 |
+
+HER2-positive versus HER2-negative remained weak. The CK-enriched top 25% view reached balanced accuracy 0.550, but sensitivity was only 0.200, so this is not clinically useful for HER2-positive detection.
+
+Interpretation:
+
+- Cellular-tissue cleanup preserved HER2-low versus HER2-zero performance, arguing against blank/background artifact as the sole explanation.
+- Strict CK enrichment weakened the HER2-low versus HER2-zero classifier, suggesting that the current GigaTIME signal may depend more on broader tissue or microenvironment context than on purely epithelial tumor-cell features.
+- Full three-class prediction remained near chance across views.
+- The next useful analysis is visual inspection of cases whose predictions change between all-tissue/QC-cellular views and CK-enriched views.
+
 ## Initial Biological Findings From the ERBB2-Extreme Pilot
 
 The current processed dataset is too small for strong claims. The main result so far is that the workflow is feasible and produces interpretable tables and figures.
@@ -787,7 +874,9 @@ Current workflow scripts:
 - `scripts/summarize_clinical_her2_gigatime.py`
 - `scripts/validate_gigatime_with_rna_signatures.py`
 - `scripts/validate_gigatime_with_rna_programs.py`
+- `scripts/cleanup_gigatime_tile_features.py`
 - `scripts/train_her2_classifier_baseline.py`
+- `scripts/train_her2_cleaned_classifier_comparison.py`
 - `scripts/render_clinical_her2_visual_qc.py`
 - `scripts/build_clinical_her2_findings_report.py`
 - `scripts/render_he_slide_images.py`
@@ -808,7 +897,9 @@ Current documentation:
 - `docs/clinical_her2_visual_qc.md`
 - `docs/clinical_her2_tile_sampling_robustness.md`
 - `docs/clinical_her2_rna_program_validation.md`
+- `docs/clinical_her2_gigatime_data_cleanup.md`
 - `docs/clinical_her2_classifier_baseline.md`
+- `docs/clinical_her2_cleaned_classifier_comparison.md`
 - `notebooks/clinical_her2_findings_simple.ipynb`
 - `notebooks/clinical_her2_findings_simple.html`
 
@@ -833,21 +924,27 @@ Current key result files:
 - `results/gigatime_tcga_brca_clinical_her2_tile256/clinical_summary/clinical_her2_summary.md`
 - `results/gigatime_tcga_brca_clinical_her2_tile256/rna_validation/gigatime_rna_signature_correlations.csv`
 - `results/gigatime_tcga_brca_clinical_her2_tile256/rna_program_validation/virtual_rna_program_correlations.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/gigatime_cleanup/cleaned_slide_features.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/gigatime_cleanup/cleanup_channel_summary.csv`
 - `results/gigatime_tcga_brca_clinical_her2_tile256/classifier_baseline/classifier_metrics.csv`
 - `results/gigatime_tcga_brca_clinical_her2_tile256/classifier_baseline/classifier_crossval_predictions.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/cleaned_classifier_comparison/cleaned_classifier_best_h_e_metrics.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/cleaned_classifier_comparison/cleaned_classifier_metrics.csv`
 - `docs/assets/clinical_her2_visual_qc/clinical_her2_visual_qc_selected_cases.csv`
 - `docs/assets/clinical_her2_visual_qc_tile256/clinical_her2_visual_qc_selected_cases.csv`
 - `docs/assets/clinical_her2_findings/clinical_her2_group_mean_heatmap.png`
 - `docs/assets/clinical_her2_tile256/clinical_her2_group_mean_heatmap.png`
 - `docs/assets/clinical_her2_rna_program_validation/virtual_rna_program_correlation_heatmap.png`
+- `docs/assets/clinical_her2_gigatime_cleanup/cleanup_key_channel_heatmap.png`
 - `docs/assets/clinical_her2_classifier_baseline/classifier_balanced_accuracy.png`
+- `docs/assets/clinical_her2_cleaned_classifier/cleaned_classifier_best_by_view.png`
 
 ## Next Immediate Step
 
-The next step is not another download. The 30-slide clinical HER2 pilot, first 256-tile robustness check, broader RNA-program validation, and first classifier baseline are complete. The next scientific step is trustworthiness review plus classifier input improvement:
+The next step is not another download. The 30-slide clinical HER2 pilot, first 256-tile robustness check, broader RNA-program validation, first classifier baseline, pre-classifier GigaTIME cleanup, and cleaned-view classifier comparison are complete. The next scientific step is trustworthiness review of the cases driving model behavior:
 
 - Ask an advisor/pathologist to review whether the H&E regions driving high virtual CD68, PD-L1, and CD11c are biologically plausible.
-- Restrict the next classifier inputs to tumor-rich tiles rather than all tissue tiles.
+- Inspect cases whose predictions change between all-tissue/QC-cellular and CK-enriched feature views.
 - Add tile distribution features and, if available, GigaTIME/pathology embeddings.
 - Adjust for tumor purity or immune deconvolution if available.
 - Check whether endothelial/stromal/tissue-composition differences explain part of the virtual signal.
