@@ -126,8 +126,14 @@ A careful way to describe this result:
 
 ## Next Step
 
-The next step should focus on stronger validation, because sparse 64-tile sampling is probably not the whole explanation for the RNA-discordant result:
+The next steps after this marker-level RNA check were the 256-tile robustness run, broader RNA-program validation, and a first held-out classifier baseline. Those are now complete.
+
+The next step should focus on stronger validation and better classifier inputs, because sparse 64-tile sampling is probably not the whole explanation for the RNA-discordant result:
 
 - Ask an advisor/pathologist to review whether high virtual signal appears in plausible H&E tissue regions or in artifacts, folds, necrosis, background, or low-quality tiles.
+- Restrict the next classifier to tumor-rich tiles rather than all sampled tissue tiles.
+- Add tile distribution features and, if available, GigaTIME/pathology embeddings.
 - Add tumor purity or immune deconvolution covariates if available.
 - Look for an external dataset with paired H&E and real mIF for direct validation.
+
+See `docs/clinical_her2_classifier_baseline.md` for the first classifier baseline.

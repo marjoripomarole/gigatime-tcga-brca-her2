@@ -35,10 +35,12 @@ The HER2 group labels come from `data/tcga_brca/clinical_her2_labels.csv`, which
 - `results/gigatime_tcga_brca_clinical_her2_tile256/clinical_summary/clinical_her2_summary.md`
 - `results/gigatime_tcga_brca_clinical_her2_tile256/rna_validation/rna_validation_summary.md`
 - `results/gigatime_tcga_brca_clinical_her2_tile256/rna_program_validation/rna_program_validation_summary.md`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/classifier_baseline/classifier_baseline_summary.md`
 - `docs/assets/clinical_her2_visual_qc/clinical_her2_visual_qc_selected_cases.csv`
 - `docs/assets/clinical_her2_visual_qc/*_he_vs_virtual_mif_qc.png`
 - `docs/assets/clinical_her2_tile256/`
 - `docs/assets/clinical_her2_rna_program_validation/`
+- `docs/assets/clinical_her2_classifier_baseline/`
 - `docs/assets/clinical_her2_visual_qc_tile256/`
 
 The earlier ERBB2-high versus ERBB2-low pilot outputs are still present under `results/gigatime_tcga_brca_extremes/`, and the documentation-facing virtual mIF images are still under:
@@ -98,6 +100,20 @@ Result:
 
 Interpretation: the virtual signal is reproducible inside GigaTIME, but broader RNA validation still does not confirm it. This strengthens the need for pathologist review, tissue-composition checks, and external validation.
 
+## First HER2 Classifier Baseline
+
+The first diagnostic-model style classifier is now complete. It used slide-level GigaTIME features from the 256-tile run with leave-one-out cross-validation.
+
+Best GigaTIME/H&E results:
+
+| Task | Best GigaTIME feature set | Accuracy | Balanced accuracy | Macro AUC |
+|---|---|---:|---:|---:|
+| HER2-low vs HER2-zero | Mean + fraction channels | 0.800 | 0.800 | 0.870 |
+| HER2-positive vs HER2-negative | Mean + fraction channels | 0.533 | 0.475 | 0.430 |
+| Three-class HER2 group | Mean + fraction channels | 0.333 | 0.333 | 0.555 |
+
+Interpretation: the classifier result is promising only for HER2-low versus HER2-zero in this tiny pilot. It is not reliable for HER2-positive detection or full three-class diagnosis.
+
 ## Visual QC Check
 
 The first visual QC pass selected the top `CD68` + `PD-L1` + `CD11c` case from each HER2 group:
@@ -154,4 +170,4 @@ conda run -n gigatime-tcga python scripts/run_gigatime_tcga_brca.py \
 
 ## Caveat
 
-This is still a pilot, not a definitive biological result. It is stronger than the first ERBB2-expression proof-of-work because it uses clinical HER2 groups and a balanced 10/10/10 design. The 256-tile rerun strengthens the sampling robustness argument, but both marker-level and broader RNA-program validation remain weak. The next scientific step is pathologist review, stronger tissue QC, tumor-purity or immune-deconvolution adjustment, and ideally an external dataset with real mIF.
+This is still a pilot, not a definitive biological result. It is stronger than the first ERBB2-expression proof-of-work because it uses clinical HER2 groups and a balanced 10/10/10 design. The 256-tile rerun strengthens the sampling robustness argument, but both marker-level and broader RNA-program validation remain weak. The first classifier baseline is useful but not clinically reliable. The next scientific step is pathologist review, tumor-rich tile selection, stronger tissue QC, tumor-purity or immune-deconvolution adjustment, and ideally an external dataset with real mIF.

@@ -360,6 +360,22 @@ The answer was still cautious:
 
 In plain language: the AI signal is repeatable inside the image model, but the RNA data still does not confirm that it represents real immune-marker biology.
 
+### First classifier baseline
+
+The next step was to stop only comparing group averages and train a simple classifier.
+
+The classifier asked:
+
+> Can GigaTIME features from a slide predict the HER2 group for a slide the model did not train on?
+
+The answer was mixed:
+
+- For HER2-low versus HER2-zero, GigaTIME features did fairly well in this tiny pilot: balanced accuracy 0.800.
+- For HER2-positive versus HER2-negative, GigaTIME features did not do well: balanced accuracy 0.475.
+- For the full three-class problem, GigaTIME features were at chance: balanced accuracy 0.333.
+
+In plain language: the current GigaTIME features may contain some signal for separating HER2-low from HER2-zero, but they are not yet reliable for clinical HER2 diagnosis.
+
 ## 8. What the Output Tables Mean
 
 ### `slide_scores.csv`
@@ -488,6 +504,7 @@ The 256-tile rerun suggests the pattern remains when more tissue tiles are sampl
 - More cases are included if reliable HER2-zero cases are available.
 - A human reviews representative H&E tiles and virtual mIF composites for plausibility.
 - Richer validation layers are added, such as tumor purity adjustment, immune deconvolution, published immune subtype annotations, or an external dataset with real mIF.
+- Classifier inputs are improved by focusing on tumor-rich tiles instead of all tissue tiles.
 
 ## 13. Reproducible Workflow Summary
 
@@ -530,7 +547,8 @@ If you are reading the project for the first time, start with:
 3. `docs/clinical_her2_gigatime_run.md` for the current full clinical HER2 result.
 4. `docs/clinical_her2_tile_sampling_robustness.md` for the 256-tile robustness check.
 5. `docs/clinical_her2_rna_program_validation.md` for the broader RNA validation check.
-6. This document for the conceptual explanation.
-7. `docs/advisor_brief.md` for the short advisor-facing summary.
+6. `docs/clinical_her2_classifier_baseline.md` for the first classifier result.
+7. This document for the conceptual explanation.
+8. `docs/advisor_brief.md` for the short advisor-facing summary.
 
 The most important caution is that GigaTIME outputs are predicted virtual mIF research features. They are not real multiplex immunofluorescence measurements and should be validated before making biological or clinical claims.

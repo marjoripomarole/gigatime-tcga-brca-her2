@@ -75,6 +75,31 @@ Key findings:
 
 This is a cautionary result. It suggests the virtual signal is reproducible inside GigaTIME, but not yet validated against orthogonal RNA evidence. It also raises the possibility that tissue composition, stromal/endothelial context, or slide sampling may be influencing the predictions.
 
+## First Classifier Baseline
+
+We then moved from group-average comparisons to a first diagnostic-model style classifier. The classifier used slide-level GigaTIME features from the 256-tile run and leave-one-out cross-validation.
+
+Three tasks were tested:
+
+- HER2-positive versus HER2-negative.
+- HER2-low versus HER2-zero.
+- Full three-class HER2-positive versus HER2-low versus HER2-zero.
+
+Main result:
+
+| Task | Best GigaTIME/H&E feature set | Balanced accuracy | Macro AUC |
+|---|---|---:|---:|
+| HER2-low vs HER2-zero | GigaTIME mean + fraction channels | 0.800 | 0.870 |
+| HER2-positive vs HER2-negative | GigaTIME mean + fraction channels | 0.475 | 0.430 |
+| Three-class HER2 group | GigaTIME mean + fraction channels | 0.333 | 0.555 |
+
+Interpretation:
+
+- The HER2-low versus HER2-zero result is promising but very small-sample and potentially unstable.
+- GigaTIME/H&E features do not currently classify HER2-positive status reliably.
+- Full three-class prediction is at chance.
+- ERBB2 RNA, included as a non-H&E reference, classified HER2-positive versus HER2-negative better than GigaTIME/H&E features. This means the labels contain molecular signal, but the current image-derived features are not capturing the clinical HER2-positive signal reliably.
+
 ## Why This Is a Good First Step
 
 - It is replication-first: the model is not retrained, only applied to public TCGA-BRCA data.
@@ -89,6 +114,7 @@ This is a cautionary result. It suggests the virtual signal is reproducible insi
 - The 64-tile-per-slide run is a practical pilot, not a final whole-slide sampling strategy.
 - The 256-tile rerun supports robustness to denser sampling, but it is still not exhaustive whole-slide analysis.
 - Bulk RNA-seq is an indirect validation layer and did not strongly validate the current GigaTIME immune-channel pattern, even with broader RNA programs.
+- The first classifier baseline is not clinically usable; it is a feasibility and failure-mode analysis.
 - Visual QC supports that the signal is not just blank background, but it is not biological validation.
 - TCGA slide quality, tissue sampling, and tumor purity need QC before strong biological claims.
 - GigaTIME is research-only and not a clinical HER2 classifier.

@@ -145,10 +145,15 @@ A careful way to describe the robustness result:
 
 ## Next Step
 
-The next step should be validation rather than another simple rerun:
+The next step after this robustness check was broader RNA-program validation and a first held-out classifier baseline. Both are now complete.
+
+The next scientific step should be validation and better classifier input design rather than another simple rerun:
 
 1. Ask an advisor/pathologist to review the high-signal H&E tiles and virtual mIF panels.
-2. Add tumor purity or immune deconvolution covariates if available.
-3. Check whether endothelial/stromal/tissue-composition differences might explain part of the virtual signal.
-4. Consider a 512-tile or more exhaustive run if compute time allows.
-5. Look for an external dataset with paired H&E and real mIF to directly evaluate GigaTIME predictions.
+2. Restrict the next classifier to tumor-rich tiles rather than all sampled tissue tiles.
+3. Add tile distribution features and, if available, GigaTIME/pathology embeddings.
+4. Add tumor purity or immune deconvolution covariates if available.
+5. Check whether endothelial/stromal/tissue-composition differences might explain part of the virtual signal.
+6. Look for an external dataset with paired H&E and real mIF to directly evaluate GigaTIME predictions.
+
+See `docs/clinical_her2_classifier_baseline.md` for the first classifier baseline.

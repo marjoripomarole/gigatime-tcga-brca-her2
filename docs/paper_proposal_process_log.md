@@ -515,6 +515,51 @@ Interpretation:
 - The signal is still not validated by orthogonal RNA evidence.
 - The endothelial negative correlations raise a tissue-composition concern that should be reviewed before any strong biological claim.
 
+### 18. Trained a First Slide-Level HER2 Classifier Baseline
+
+The next methodological step moved beyond group-average comparisons. A first classifier baseline was trained to ask whether slide-level GigaTIME features can predict held-out clinical HER2 labels.
+
+Command:
+
+```bash
+conda run -n gigatime-tcga python scripts/train_her2_classifier_baseline.py
+```
+
+Main local outputs:
+
+- `results/gigatime_tcga_brca_clinical_her2_tile256/classifier_baseline/classifier_crossval_predictions.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/classifier_baseline/classifier_metrics.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/classifier_baseline/classifier_confusion_matrices.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/classifier_baseline/classifier_baseline_summary.md`
+- `docs/clinical_her2_classifier_baseline.md`
+- `docs/assets/clinical_her2_classifier_baseline/`
+
+Model setup:
+
+- Input features: slide-level GigaTIME virtual channel means, thresholded fraction-positive channel summaries, interpretable marker subsets, and composite virtual immune/tumor programs from the 256-tile run.
+- Reference feature: ERBB2 RNA TPM, included only as a non-H&E benchmark.
+- Output labels: clinical HER2-positive, HER2-low, and HER2-zero groups from TCGA IHC/ISH fields.
+- Models: regularized logistic classifier and nearest-centroid baseline.
+- Evaluation: leave-one-out cross-validation, with accuracy, balanced accuracy, macro AUC, sensitivity, specificity, and confusion matrices.
+
+Main GigaTIME/H&E result:
+
+| Task | Best GigaTIME/H&E feature set | Accuracy | Balanced accuracy | Macro AUC |
+|---|---|---:|---:|---:|
+| HER2-low vs HER2-zero | GigaTIME mean + fraction channels | 0.800 | 0.800 | 0.870 |
+| HER2-positive vs HER2-negative | GigaTIME mean + fraction channels | 0.533 | 0.475 | 0.430 |
+| Three-class HER2 group | GigaTIME mean + fraction channels | 0.333 | 0.333 | 0.555 |
+
+The ERBB2 RNA reference classified HER2-positive versus HER2-negative much better than GigaTIME/H&E features, with balanced accuracy 0.850 and macro AUC 0.800. This is useful because it shows the clinical labels contain molecular HER2 signal, but the current H&E-derived features are not capturing the HER2-positive diagnostic signal reliably.
+
+Interpretation:
+
+- The first classifier framework now works end to end.
+- GigaTIME features look most promising for the subtle HER2-low versus HER2-zero comparison.
+- GigaTIME features do not yet reliably detect HER2-positive disease.
+- Full three-class clinical HER2 prediction is at chance in this tiny pilot.
+- This is a feasibility and failure-mode analysis, not a diagnostic model.
+
 ## Initial Biological Findings From the ERBB2-Extreme Pilot
 
 The current processed dataset is too small for strong claims. The main result so far is that the workflow is feasible and produces interpretable tables and figures.
@@ -674,6 +719,19 @@ This step is important because model outputs can look polished while still being
 
 The first 256-tile visual QC repeated the same representative cases and again showed tissue-containing high-signal tiles. The next visual step should be human review by an advisor/pathologist, not only automated figure generation.
 
+### Analysis 6: Train and Evaluate HER2 Classifiers
+
+This is now implemented as a first baseline. The current baseline uses slide-level aggregate features, which is useful for feasibility but not sufficient for a final diagnostic model.
+
+The next classifier versions should:
+
+- Restrict inputs to tumor-rich tiles rather than all tissue tiles.
+- Add tile distribution features such as percentiles, maximum signal, and spatial heterogeneity.
+- Add H&E tile embeddings if available from GigaTIME or another pathology foundation model.
+- Use multiple-instance learning once tile-level features or embeddings are organized reliably.
+- Use nested cross-validation or a separate held-out test set before reporting tuned model performance.
+- Report confusion matrices, AUC, sensitivity, specificity, and calibrated probabilities for each HER2 task.
+
 ## Paper Proposal Structure
 
 ### Background
@@ -697,6 +755,7 @@ Evaluate whether GigaTIME-derived virtual mIF features from TCGA-BRCA H&E slides
 5. Compare GigaTIME channels across HER2 clinical groups.
 6. Perform indirect validation against RNA-seq immune and proliferation signatures.
 7. Generate visual QC panels and virtual mIF composites for interpretability.
+8. Train cross-validated slide-level classifier baselines and evaluate diagnostic-model failure modes.
 
 ### Expected Contribution
 
@@ -711,6 +770,7 @@ This study would not claim that GigaTIME diagnoses HER2 status. Instead, it woul
 - TCGA clinical supplement files may contain missing, not evaluated, or inconsistent fields.
 - No matched real mIF validation data is currently present in this project.
 - GigaTIME predictions are research features, not clinical measurements.
+- The first classifier baseline is very small and should not be interpreted as diagnostic performance.
 - Whole-slide sampling, tile quality, tumor purity, and batch/stain variation need stronger QC.
 
 ## Reproducibility Checklist
@@ -727,6 +787,7 @@ Current workflow scripts:
 - `scripts/summarize_clinical_her2_gigatime.py`
 - `scripts/validate_gigatime_with_rna_signatures.py`
 - `scripts/validate_gigatime_with_rna_programs.py`
+- `scripts/train_her2_classifier_baseline.py`
 - `scripts/render_clinical_her2_visual_qc.py`
 - `scripts/build_clinical_her2_findings_report.py`
 - `scripts/render_he_slide_images.py`
@@ -747,6 +808,7 @@ Current documentation:
 - `docs/clinical_her2_visual_qc.md`
 - `docs/clinical_her2_tile_sampling_robustness.md`
 - `docs/clinical_her2_rna_program_validation.md`
+- `docs/clinical_her2_classifier_baseline.md`
 - `notebooks/clinical_her2_findings_simple.ipynb`
 - `notebooks/clinical_her2_findings_simple.html`
 
@@ -771,18 +833,22 @@ Current key result files:
 - `results/gigatime_tcga_brca_clinical_her2_tile256/clinical_summary/clinical_her2_summary.md`
 - `results/gigatime_tcga_brca_clinical_her2_tile256/rna_validation/gigatime_rna_signature_correlations.csv`
 - `results/gigatime_tcga_brca_clinical_her2_tile256/rna_program_validation/virtual_rna_program_correlations.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/classifier_baseline/classifier_metrics.csv`
+- `results/gigatime_tcga_brca_clinical_her2_tile256/classifier_baseline/classifier_crossval_predictions.csv`
 - `docs/assets/clinical_her2_visual_qc/clinical_her2_visual_qc_selected_cases.csv`
 - `docs/assets/clinical_her2_visual_qc_tile256/clinical_her2_visual_qc_selected_cases.csv`
 - `docs/assets/clinical_her2_findings/clinical_her2_group_mean_heatmap.png`
 - `docs/assets/clinical_her2_tile256/clinical_her2_group_mean_heatmap.png`
 - `docs/assets/clinical_her2_rna_program_validation/virtual_rna_program_correlation_heatmap.png`
+- `docs/assets/clinical_her2_classifier_baseline/classifier_balanced_accuracy.png`
 
 ## Next Immediate Step
 
-The next step is not another download. The 30-slide clinical HER2 pilot, first 256-tile robustness check, and broader RNA-program validation are complete. The next scientific step is trustworthiness review:
+The next step is not another download. The 30-slide clinical HER2 pilot, first 256-tile robustness check, broader RNA-program validation, and first classifier baseline are complete. The next scientific step is trustworthiness review plus classifier input improvement:
 
 - Ask an advisor/pathologist to review whether the H&E regions driving high virtual CD68, PD-L1, and CD11c are biologically plausible.
+- Restrict the next classifier inputs to tumor-rich tiles rather than all tissue tiles.
+- Add tile distribution features and, if available, GigaTIME/pathology embeddings.
 - Adjust for tumor purity or immune deconvolution if available.
 - Check whether endothelial/stromal/tissue-composition differences explain part of the virtual signal.
-- Consider a 512-tile or more exhaustive run if compute time allows.
 - Search for an external dataset with paired H&E and real mIF for direct validation.

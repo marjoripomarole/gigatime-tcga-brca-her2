@@ -134,10 +134,14 @@ A careful way to describe this step:
 
 ## Next Step
 
-The next step should be trustworthiness review:
+The next step after this validation check was to train a first held-out classifier baseline. That classifier is now complete and is documented in `docs/clinical_her2_classifier_baseline.md`.
+
+The next scientific step should combine trustworthiness review with better classifier inputs:
 
 1. Ask an advisor/pathologist to review the high virtual immune/checkpoint H&E regions.
-2. Add tumor purity or immune deconvolution covariates if available.
-3. Check whether endothelial/stromal/tissue-composition differences might explain part of the virtual signal.
-4. Search for an external dataset with paired H&E and real mIF.
-5. Only then expand to a larger TCGA cohort.
+2. Restrict the next classifier to tumor-rich tiles rather than all sampled tissue tiles.
+3. Add tile distribution features and, if available, GigaTIME/pathology embeddings.
+4. Add tumor purity or immune deconvolution covariates if available.
+5. Check whether endothelial/stromal/tissue-composition differences might explain part of the virtual signal.
+6. Search for an external dataset with paired H&E and real mIF.
+7. Only then expand to a larger TCGA cohort.

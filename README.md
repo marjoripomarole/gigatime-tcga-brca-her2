@@ -16,6 +16,7 @@ The goal is to generate virtual multiplex immunofluorescence (mIF) features from
 - `scripts/summarize_clinical_her2_gigatime.py`: compares GigaTIME virtual mIF outputs across clinical HER2-positive/HER2-low/HER2-zero groups.
 - `scripts/validate_gigatime_with_rna_signatures.py`: compares GigaTIME virtual channels with matched RNA-seq marker signatures as an indirect validation check.
 - `scripts/validate_gigatime_with_rna_programs.py`: compares GigaTIME virtual composite programs with broader RNA immune and tissue programs.
+- `scripts/train_her2_classifier_baseline.py`: trains first slide-level HER2 classifier baselines from GigaTIME features with leave-one-out cross-validation.
 - `scripts/render_virtual_mif_channel_images.py`: renders all-channel virtual mIF figures from GigaTIME tile and slide predictions.
 - `scripts/render_virtual_mif_composites.py`: reruns GigaTIME on selected tiles and renders fluorescence-style virtual mIF composites from the full predicted channel maps.
 - `scripts/render_clinical_her2_visual_qc.py`: renders clinical HER2 visual QC panels for cases driving high virtual `CD68`/`PD-L1`/`CD11c` signal.
@@ -29,6 +30,7 @@ The goal is to generate virtual multiplex immunofluorescence (mIF) features from
 - `docs/clinical_her2_visual_qc.md`: first visual/spatial QC pass for the clinical HER2 virtual immune-channel signal.
 - `docs/clinical_her2_tile_sampling_robustness.md`: 256-tile robustness check showing whether the 64-tile HER2-zero versus HER2-low signal persists with denser sampling.
 - `docs/clinical_her2_rna_program_validation.md`: broader RNA immune/tissue program validation after the 256-tile robustness run.
+- `docs/clinical_her2_classifier_baseline.md`: first diagnostic-model style classifier baseline for HER2-positive/negative, HER2-low/zero, and three-class HER2 prediction.
 - `docs/advisor_brief.md`: concise project framing and discussion points.
 - `docs/current_pilot_run.md`: current two-case run status and advisor-facing caveats.
 - `configs/tcga_brca_her2.yaml`: default paths and pilot settings.
@@ -233,6 +235,14 @@ conda run -n gigatime-tcga python scripts/validate_gigatime_with_rna_programs.py
 
 This compares virtual composite programs such as myeloid/checkpoint and T-cell/checkpoint with broader RNA programs such as cytotoxic T-cell, checkpoint/IFNG, myeloid/macrophage, B-cell, stromal, endothelial, epithelial, and proliferation signatures.
 
+To run the first slide-level HER2 classifier baseline:
+
+```bash
+conda run -n gigatime-tcga python scripts/train_her2_classifier_baseline.py
+```
+
+This trains regularized logistic and nearest-centroid baselines with leave-one-out cross-validation. It reports HER2-positive versus negative, HER2-low versus zero, and full three-class HER2 prediction performance.
+
 ## 6. Render All Virtual mIF Channel Images
 
 ```bash
@@ -278,4 +288,5 @@ This writes:
 - The 256-tile robustness rerun reproduced the same HER2-zero greater than HER2-low direction for CD68, PD-L1, and CD11c. The leading pairwise q values improved to about 0.113 but remained above 0.05.
 - The first RNA-seq validation check did not strongly confirm the virtual immune-channel signal; correlations between matched RNA marker signatures and GigaTIME channels were weak and not FDR-significant.
 - Broader RNA program validation also did not positively confirm the virtual immune/checkpoint signal. The strongest FDR-significant associations were negative correlations between virtual immune/checkpoint programs and endothelial RNA signal.
+- The first classifier baseline suggests possible GigaTIME signal for HER2-low versus HER2-zero, but not reliable HER2-positive/negative or three-class diagnosis. This is not clinically usable.
 - The first visual QC pass found that high virtual CD68/PD-L1/CD11c tiles were tissue-containing and cellular rather than obvious blank background, but this still does not validate the virtual marker biology.

@@ -52,6 +52,22 @@ ASSET_COPIES = [
         "results/gigatime_tcga_brca_clinical_her2_tile256/rna_program_validation/virtual_programs_by_her2_group.png",
         "docs/assets/clinical_her2_rna_program_validation/virtual_programs_by_her2_group.png",
     ),
+    (
+        "results/gigatime_tcga_brca_clinical_her2_tile256/classifier_baseline/classifier_balanced_accuracy.png",
+        "docs/assets/clinical_her2_classifier_baseline/classifier_balanced_accuracy.png",
+    ),
+    (
+        "results/gigatime_tcga_brca_clinical_her2_tile256/classifier_baseline/confusion_her2_low_vs_zero.png",
+        "docs/assets/clinical_her2_classifier_baseline/confusion_her2_low_vs_zero.png",
+    ),
+    (
+        "results/gigatime_tcga_brca_clinical_her2_tile256/classifier_baseline/confusion_her2_positive_vs_negative.png",
+        "docs/assets/clinical_her2_classifier_baseline/confusion_her2_positive_vs_negative.png",
+    ),
+    (
+        "results/gigatime_tcga_brca_clinical_her2_tile256/classifier_baseline/confusion_her2_three_class.png",
+        "docs/assets/clinical_her2_classifier_baseline/confusion_her2_three_class.png",
+    ),
 ]
 
 ROBUSTNESS_CHANNELS = ["CD68", "PD-L1", "CD11c", "CD3", "CD4", "Ki67"]
@@ -121,6 +137,13 @@ def parse_args() -> argparse.Namespace:
         default=(
             "results/gigatime_tcga_brca_clinical_her2_tile256/rna_program_validation/"
             "virtual_program_group_summary.csv"
+        ),
+    )
+    parser.add_argument(
+        "--classifier-metrics",
+        default=(
+            "results/gigatime_tcga_brca_clinical_her2_tile256/classifier_baseline/"
+            "classifier_metrics.csv"
         ),
     )
     return parser.parse_args()
@@ -297,6 +320,50 @@ def program_group_rows(rows: list[dict[str, str]], limit: int = 8) -> list[list[
     ]
 
 
+def classifier_rows(rows: list[dict[str, str]]) -> tuple[list[list[str]], list[list[str]]]:
+    logistic = [row for row in rows if row.get("model") == "regularized_logistic"]
+    h_e_rows = [row for row in logistic if row.get("feature_set") != "erbb2_rna_reference_not_h_e"]
+    task_order = ["her2_positive_vs_negative", "her2_low_vs_zero", "her2_three_class"]
+
+    def best_for(task: str, candidates: list[dict[str, str]]) -> dict[str, str] | None:
+        task_rows = [row for row in candidates if row.get("task") == task]
+        if not task_rows:
+            return None
+        return max(task_rows, key=lambda row: as_float(row, "balanced_accuracy"))
+
+    best_h_e = []
+    for task in task_order:
+        row = best_for(task, h_e_rows)
+        if not row:
+            continue
+        best_h_e.append(
+            [
+                row["task_label"],
+                row["feature_set"],
+                fmt(as_float(row, "accuracy"), 3),
+                fmt(as_float(row, "balanced_accuracy"), 3),
+                fmt(as_float(row, "macro_auc_ovr"), 3),
+                fmt(as_float(row, "sensitivity"), 3),
+                fmt(as_float(row, "specificity"), 3),
+            ]
+        )
+
+    reference_rows = []
+    for task in task_order:
+        row = best_for(task, [item for item in logistic if item.get("feature_set") == "erbb2_rna_reference_not_h_e"])
+        if not row:
+            continue
+        reference_rows.append(
+            [
+                row["task_label"],
+                fmt(as_float(row, "accuracy"), 3),
+                fmt(as_float(row, "balanced_accuracy"), 3),
+                fmt(as_float(row, "macro_auc_ovr"), 3),
+            ]
+        )
+    return best_h_e, reference_rows
+
+
 def build_content(args: argparse.Namespace):
     copy_assets()
     channels = read_rows(Path(args.channel_summary))
@@ -310,6 +377,8 @@ def build_content(args: argparse.Namespace):
     rna_program_correlations = read_optional_rows(Path(args.rna_program_correlations))
     rna_program_groups = read_optional_rows(Path(args.rna_program_group_summary))
     virtual_program_groups = read_optional_rows(Path(args.virtual_program_group_summary))
+    classifier_metrics = read_optional_rows(Path(args.classifier_metrics))
+    classifier_h_e_rows, classifier_reference_rows = classifier_rows(classifier_metrics)
 
     return {
         "channel_rows": channel_summary_rows(channels),
@@ -324,6 +393,8 @@ def build_content(args: argparse.Namespace):
         "program_correlation_rows": program_correlation_rows(rna_program_correlations),
         "rna_program_group_rows": program_group_rows(rna_program_groups),
         "virtual_program_group_rows": program_group_rows(virtual_program_groups),
+        "classifier_h_e_rows": classifier_h_e_rows,
+        "classifier_reference_rows": classifier_reference_rows,
     }
 
 
@@ -346,7 +417,7 @@ def build_notebook(args: argparse.Namespace, content: dict[str, list[list[str]]]
 **Simple display notebook**  
 Updated clinical HER2 pilot summary for TCGA-BRCA.
 
-**Core message:** we completed a balanced 30-slide pilot across HER2-positive, HER2-low, and HER2-zero cases. The first 64-tile run suggested higher immune/checkpoint-like signal in HER2-zero than HER2-low, and the denser 256-tile robustness run reproduced and strengthened the same CD68, PD-L1, and CD11c pattern. Marker-level and broader RNA-program validation remain weak, so this is still proposal-ready evidence, not validated biology.
+**Core message:** we completed a balanced 30-slide pilot across HER2-positive, HER2-low, and HER2-zero cases. The first 64-tile run suggested higher immune/checkpoint-like signal in HER2-zero than HER2-low, and the denser 256-tile robustness run reproduced and strengthened the same CD68, PD-L1, and CD11c pattern. Marker-level and broader RNA-program validation remain weak. A first cross-validated classifier suggests possible HER2-low versus HER2-zero signal, but not reliable clinical HER2 diagnosis.
             """
         ),
         notebook_cell(
@@ -476,6 +547,35 @@ This should be described as a **hypothesis-generating pilot signal**, not a fina
             "![Virtual programs by HER2 group](../docs/assets/clinical_her2_rna_program_validation/virtual_programs_by_her2_group.png)"
         ),
         notebook_cell(
+            "## First HER2 Classifier Baseline\n\n"
+            "We trained a first slide-level classifier using GigaTIME features and leave-one-out cross-validation. This is the first diagnostic-model style check, but it is still only a 30-case pilot.\n\n"
+            + markdown_table(
+                ["Task", "Best GigaTIME/H&E feature set", "Accuracy", "Balanced accuracy", "Macro AUC", "Sensitivity", "Specificity"],
+                content["classifier_h_e_rows"],
+            )
+            + "\n\n**Interpretation:** GigaTIME features were promising for HER2-low versus HER2-zero, but did not reliably classify HER2-positive versus HER2-negative or the full three-class HER2 grouping.\n\n"
+            "![Classifier balanced accuracy](../docs/assets/clinical_her2_classifier_baseline/classifier_balanced_accuracy.png)"
+        ),
+        notebook_cell(
+            "## GigaTIME/H&E Classifier Confusion Matrices\n\n"
+            "These confusion matrices show the best GigaTIME/H&E regularized logistic model for each task. They do not use the ERBB2 RNA reference feature.\n\n"
+            "### HER2-low versus HER2-zero\n\n"
+            "![HER2-low versus HER2-zero confusion matrix](../docs/assets/clinical_her2_classifier_baseline/confusion_her2_low_vs_zero.png)\n\n"
+            "### HER2-positive versus HER2-negative\n\n"
+            "![HER2-positive versus HER2-negative confusion matrix](../docs/assets/clinical_her2_classifier_baseline/confusion_her2_positive_vs_negative.png)\n\n"
+            "### Three-class HER2 group\n\n"
+            "![Three-class HER2 confusion matrix](../docs/assets/clinical_her2_classifier_baseline/confusion_her2_three_class.png)"
+        ),
+        notebook_cell(
+            "## ERBB2 RNA Reference Classifier\n\n"
+            "ERBB2 RNA was included only as a non-H&E reference. It is not an image-based model.\n\n"
+            + markdown_table(
+                ["Task", "Accuracy", "Balanced accuracy", "Macro AUC"],
+                content["classifier_reference_rows"],
+            )
+            + "\n\nThis comparison matters because ERBB2 RNA predicted HER2-positive versus HER2-negative better than the current GigaTIME/H&E features. That tells us the clinical labels have molecular signal, but the current image-derived classifier is not capturing it reliably yet."
+        ),
+        notebook_cell(
             "## RNA Correlation Heatmap\n\n"
             "![GigaTIME RNA correlation heatmap](../docs/assets/clinical_her2_rna_validation/gigatime_rna_correlation_heatmap.png)"
         ),
@@ -509,6 +609,7 @@ This should be described as a **hypothesis-generating pilot signal**, not a fina
 - Visual QC suggests the signal is not simply blank background.
 - The 256-tile robustness run reproduced and strengthened the same CD68, PD-L1, and CD11c direction.
 - Single-marker and broader RNA-program validation still did not strongly confirm the virtual immune-channel signal.
+- A first classifier showed possible HER2-low versus HER2-zero signal, but not reliable HER2-positive or three-class diagnosis.
 
 ## What We Should Not Say Yet
 
@@ -525,10 +626,11 @@ This should be described as a **hypothesis-generating pilot signal**, not a fina
 The 256-tile robustness check is now complete. The clean next step is validation:
 
 1. Ask an advisor/pathologist to review the high-signal H&E tiles and virtual mIF panels.
-2. Add tumor purity or immune deconvolution covariates if available.
-3. Consider a 512-tile or more exhaustive run if compute time allows.
-4. Find an external dataset with paired H&E and real mIF, if possible.
-5. Expand beyond 10 cases per group only after the QC and validation logic is clear.
+2. Improve classifier inputs by restricting to tumor-rich tiles and adding tile distribution features.
+3. Add tumor purity or immune deconvolution covariates if available.
+4. Consider a 512-tile or more exhaustive run if compute time allows.
+5. Find an external dataset with paired H&E and real mIF, if possible.
+6. Expand beyond 10 cases per group only after the QC and validation logic is clear.
 
 **One-sentence proposal framing:** GigaTIME produced a reproducible but still unvalidated virtual immune/checkpoint signal separating HER2-zero from HER2-low in a balanced TCGA-BRCA pilot, motivating pathologist review and orthogonal validation.
             """
@@ -579,7 +681,7 @@ img { display: block; width: 100%; max-width: 980px; height: auto; margin: 14px 
         """
 <div class="hero">
   <h1>Clinical HER2 GigaTIME Findings</h1>
-  <p>Simple summary of the TCGA-BRCA pilot so far: 30 slides, three clinical HER2 groups, GigaTIME virtual mIF outputs, RNA validation, RNA program validation, visual QC, and a 256-tile robustness check.</p>
+  <p>Simple summary of the TCGA-BRCA pilot so far: 30 slides, three clinical HER2 groups, GigaTIME virtual mIF outputs, RNA validation, RNA program validation, visual QC, a 256-tile robustness check, and a first classifier baseline.</p>
 </div>
 """,
         section(
@@ -702,6 +804,44 @@ img { display: block; width: 100%; max-width: 980px; height: auto; margin: 14px 
             + "<img src='../docs/assets/clinical_her2_rna_program_validation/virtual_programs_by_her2_group.png' alt='Virtual programs by HER2 group'>",
         ),
         section(
+            "First HER2 Classifier Baseline",
+            "<p>We trained a first slide-level classifier using GigaTIME features and leave-one-out cross-validation. This is a diagnostic-model style check, but still only a 30-case pilot.</p>"
+            + html_table(
+                [
+                    "Task",
+                    "Best GigaTIME/H&E feature set",
+                    "Accuracy",
+                    "Balanced accuracy",
+                    "Macro AUC",
+                    "Sensitivity",
+                    "Specificity",
+                ],
+                content["classifier_h_e_rows"],
+            )
+            + "<p class='small'>GigaTIME features were promising for HER2-low versus HER2-zero, but did not reliably classify HER2-positive versus HER2-negative or the full three-class HER2 grouping.</p>"
+            + "<img src='../docs/assets/clinical_her2_classifier_baseline/classifier_balanced_accuracy.png' alt='HER2 classifier balanced accuracy'>",
+        ),
+        section(
+            "GigaTIME/H&E Classifier Confusion Matrices",
+            """
+<p>These confusion matrices show the best GigaTIME/H&E regularized logistic model for each task. They do not use the ERBB2 RNA reference feature.</p>
+<div class="grid">
+  <div><h3>HER2-low vs HER2-zero</h3><img src="../docs/assets/clinical_her2_classifier_baseline/confusion_her2_low_vs_zero.png" alt="HER2-low versus HER2-zero confusion matrix"></div>
+  <div><h3>HER2-positive vs HER2-negative</h3><img src="../docs/assets/clinical_her2_classifier_baseline/confusion_her2_positive_vs_negative.png" alt="HER2-positive versus HER2-negative confusion matrix"></div>
+  <div><h3>Three-class HER2</h3><img src="../docs/assets/clinical_her2_classifier_baseline/confusion_her2_three_class.png" alt="Three-class HER2 confusion matrix"></div>
+</div>
+""",
+        ),
+        section(
+            "ERBB2 RNA Reference Classifier",
+            "<p>ERBB2 RNA was included only as a non-H&E reference. It is not an image-based model.</p>"
+            + html_table(
+                ["Task", "Accuracy", "Balanced accuracy", "Macro AUC"],
+                content["classifier_reference_rows"],
+            )
+            + "<p class='small'>ERBB2 RNA predicted HER2-positive versus HER2-negative better than the current GigaTIME/H&E features, which means the image-derived classifier is not capturing that diagnostic signal reliably yet.</p>",
+        ),
+        section(
             "Visual QC",
             "<p>Top cases were selected by combined CD68 + PD-L1 + CD11c virtual signal.</p>"
             + html_table(["Group", "Case", "Combined", "CD68", "PD-L1", "CD11c"], content["qc_rows"])
@@ -732,13 +872,14 @@ img { display: block; width: 100%; max-width: 980px; height: auto; margin: 14px 
   <li>The 256-tile robustness run reproduced and strengthened that same direction.</li>
   <li>Visual QC makes the signal look plausible enough to follow.</li>
   <li>Marker-level and RNA-program validation did not confirm the signal strongly, so the claim must stay cautious.</li>
+  <li>A first classifier showed possible HER2-low versus HER2-zero signal, but not reliable HER2-positive or three-class diagnosis.</li>
 </ul>
 """,
         ),
         section(
             "Next Step",
             """
-<p>The 256-tile robustness check and richer RNA-program validation are complete. The next step is trustworthiness review: pathologist review of the high-signal tiles, tumor-purity or immune-deconvolution adjustment, and ideally an external dataset with paired H&E and real mIF.</p>
+<p>The 256-tile robustness check, richer RNA-program validation, and first classifier baseline are complete. The next step is trustworthiness review and better classifier inputs: pathologist review of high-signal tiles, tumor-rich tile selection, tumor-purity or immune-deconvolution adjustment, and ideally an external dataset with paired H&E and real mIF.</p>
 <p><strong>Proposal framing:</strong> GigaTIME produced a reproducible but unvalidated virtual immune/checkpoint signal separating HER2-zero from HER2-low in a balanced TCGA-BRCA pilot, motivating pathologist review and orthogonal validation.</p>
 """,
         ),

@@ -169,16 +169,48 @@ Main result:
 
 This result means the virtual signal is internally reproducible but still not orthogonally validated by RNA. It also raises a tissue-composition question that should be reviewed with pathology input.
 
+## First Classifier Baseline Update
+
+The next step moved from group-average comparisons to a first held-out classifier baseline.
+
+Command:
+
+```bash
+conda run -n gigatime-tcga python scripts/train_her2_classifier_baseline.py
+```
+
+The classifier used slide-level GigaTIME features from the 256-tile run and leave-one-out cross-validation. It tested HER2-positive versus HER2-negative, HER2-low versus HER2-zero, and full three-class HER2 prediction.
+
+Best GigaTIME/H&E results:
+
+| Task | Best GigaTIME/H&E feature set | Accuracy | Balanced accuracy | Macro AUC |
+|---|---|---:|---:|---:|
+| HER2-low vs HER2-zero | Mean + fraction channels | 0.800 | 0.800 | 0.870 |
+| HER2-positive vs HER2-negative | Mean + fraction channels | 0.533 | 0.475 | 0.430 |
+| Three-class HER2 group | Mean + fraction channels | 0.333 | 0.333 | 0.555 |
+
+Interpretation:
+
+- The first classifier framework now works end to end.
+- The current GigaTIME/H&E features look promising only for HER2-low versus HER2-zero.
+- The current GigaTIME/H&E features do not reliably classify HER2-positive status.
+- Full three-class HER2 prediction is at chance in this 30-case pilot.
+- ERBB2 RNA, included only as a non-H&E reference, performs much better for HER2-positive versus HER2-negative, showing that the clinical labels have molecular signal that the current image-derived features do not yet capture.
+
+See `docs/clinical_her2_classifier_baseline.md` for the full classifier details.
+
 ## Next Step
 
-The next analysis step is trustworthiness review. The 256-tile rerun supports that the HER2-zero versus HER2-low signal is not simply a 64-tile sampling accident. However, marker-level and broader RNA validation remain weak, and visual QC still does not establish biological validity.
+The next analysis step is trustworthiness review plus better classifier input design. The 256-tile rerun supports that the HER2-zero versus HER2-low signal is not simply a 64-tile sampling accident, and the classifier baseline suggests the same HER2-low versus HER2-zero direction may be predictive. However, marker-level and broader RNA validation remain weak, visual QC still does not establish biological validity, and the classifier is not clinically reliable.
 
 1. Ask an advisor/pathologist to review the source H&E tiles and virtual mIF composites for cases driving high `CD68`, `PD-L1`, and `CD11c`.
-2. Compare GigaTIME predictions with tumor purity estimates, immune deconvolution, or published TCGA immune subtype annotations.
-3. Consider a 512-tile or more exhaustive run if compute time allows.
-4. Expand beyond the 30 selected cases if more clinical HER2-zero cases can be reliably included.
+2. Restrict the next classifier inputs to tumor-rich tiles rather than all tissue tiles.
+3. Add tile distribution features and, if available, GigaTIME or pathology foundation-model embeddings.
+4. Compare GigaTIME predictions with tumor purity estimates, immune deconvolution, or published TCGA immune subtype annotations.
+5. Expand beyond the 30 selected cases if more clinical HER2-zero cases can be reliably included.
 
 See `docs/clinical_her2_rna_validation.md` for the first RNA-seq marker-signature comparison.
 See `docs/clinical_her2_visual_qc.md` for the first H&E-versus-virtual-mIF visual QC pass.
 See `docs/clinical_her2_tile_sampling_robustness.md` for the 256-tile robustness check.
 See `docs/clinical_her2_rna_program_validation.md` for the broader RNA program validation check.
+See `docs/clinical_her2_classifier_baseline.md` for the first classifier baseline.

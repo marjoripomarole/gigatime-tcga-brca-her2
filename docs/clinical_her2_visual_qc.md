@@ -129,10 +129,13 @@ A careful way to describe this step:
 
 ## Next Step
 
-The denser 256-tile sampling step is now complete. The next methodological improvement should be validation:
+The denser 256-tile sampling step, broader RNA-program validation, and first held-out classifier baseline are now complete. The next methodological improvement should be validation plus better classifier inputs:
 
 - Ask an advisor/pathologist to review whether the high-signal H&E regions are plausible.
-- Consider a 512-tile or more exhaustive run if compute time allows.
+- Restrict the next classifier to tumor-rich tiles rather than all sampled tissue tiles.
+- Add tile distribution features and, if available, GigaTIME/pathology embeddings.
 - Compare the predictions with tumor purity estimates and immune deconvolution outputs.
 - Review whether endothelial/stromal/tissue-composition differences may explain part of the virtual signal, based on the broader RNA program validation.
 - Look for an external dataset with paired H&E and real mIF for direct validation.
+
+See `docs/clinical_her2_classifier_baseline.md` for the first classifier baseline.
