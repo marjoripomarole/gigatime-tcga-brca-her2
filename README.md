@@ -35,6 +35,7 @@ The goal is to generate virtual multiplex immunofluorescence (mIF) features from
 - `docs/clinical_her2_gigatime_data_cleanup.md`: pre-classifier tile cleanup using cellular tissue and virtual CK-enriched GigaTIME views.
 - `docs/clinical_her2_classifier_baseline.md`: first diagnostic-model style classifier baseline for HER2-positive/negative, HER2-low/zero, and three-class HER2 prediction.
 - `docs/clinical_her2_cleaned_classifier_comparison.md`: classifier comparison after GigaTIME tile cleanup and CK-enriched feature selection.
+- `docs/her2_isoform_state_hypothesis.md`: sharper paper-proposal framing around HER2 state, isoform hypotheses, targetability, and language guardrails.
 - `docs/advisor_brief.md`: concise project framing and discussion points.
 - `docs/current_pilot_run.md`: current two-case run status and advisor-facing caveats.
 - `configs/tcga_brca_her2.yaml`: default paths and pilot settings.
@@ -312,3 +313,4 @@ This writes:
 - The pre-classifier cleanup shows that the HER2-zero greater than HER2-low CD68/PD-L1/CD11c signal persists after cellular-tissue filtering, but weakens under strict CK-enriched tile selection. This suggests the original signal may depend partly on broader tissue context, not only tumor-rich tiles.
 - The cleaned-view classifier comparison preserves HER2-low versus HER2-zero balanced accuracy at 0.800 after cellular-tissue filtering, but drops to 0.650 in CK-enriched views. This supports a microenvironment/tissue-context interpretation more than a purely tumor-epithelial HER2 classifier.
 - The first visual QC pass found that high virtual CD68/PD-L1/CD11c tiles were tissue-containing and cellular rather than obvious blank background, but this still does not validate the virtual marker biology.
+- The sharper paper angle is to ask whether image-derived features predict or associate with HER2-related biological states, such as ERBB2 isoform/transcript context, signaling, or targetability. We should not claim that image AI detects HER2 isoforms without transcript-level or protein-level validation.

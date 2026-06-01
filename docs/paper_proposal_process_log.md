@@ -829,9 +829,34 @@ HER2 is a clinically important axis in breast cancer. The emergence of HER2-low 
 
 Traditional H&E slides are widely available, but they do not directly provide multiplex immune-marker information. Real mIF is informative but expensive and not routinely available for large public cohorts. Virtual mIF models may provide a scalable way to generate hypotheses about immune microenvironment differences from existing pathology slides.
 
+The sharper biology gap is that HER2 categories are often treated as if they only represent "how much HER2" is present. For a stronger paper, we should ask whether image-derived features associate with HER2-related biological states, such as ERBB2 transcript/isoform context, preserved signaling, altered antibody targetability, or treatment-resistance hypotheses.
+
+### HER2 Isoform/State Hypothesis
+
+The most interesting future direction is not to claim that image AI sees HER2 isoforms directly. The safer and more scientifically useful question is whether image-derived features predict or associate with HER2 isoform/state hypotheses.
+
+Potential high-impact hypotheses:
+
+- HER2-low versus HER2-zero tumors may differ in hidden or alternate ERBB2 transcript/isoform expression.
+- Some HER2-positive tumors may have image-derived tissue states associated with trastuzumab or antibody-drug conjugate resistance.
+- Some tumors may preserve HER2 pathway signaling while having reduced antibody targetability.
+
+Language guardrails:
+
+- Use: "associated with," "predicts," "stratifies," and "image-derived correlate of HER2 state."
+- Avoid: "detects HER2 isoforms," "diagnoses isoforms," "directly measures targetability," or "proves therapy resistance."
+
+Validation required:
+
+- ERBB2 transcript-level or isoform-aware quantification if available.
+- Protein-level or antibody-based validation using IHC, ISH, real mIF, proteomics, or similar data.
+- External therapy-response cohorts for trastuzumab or ADC resistance questions, because TCGA-BRCA alone is not enough to test treatment resistance.
+
+See `docs/her2_isoform_state_hypothesis.md` for the current working version of this framing.
+
 ### Objective
 
-Evaluate whether GigaTIME-derived virtual mIF features from TCGA-BRCA H&E slides differ across clinical HER2 groups and whether those predicted features show consistency with molecular and clinical annotations.
+Evaluate whether GigaTIME-derived virtual mIF features from TCGA-BRCA H&E slides differ across clinical HER2 groups and whether those predicted features associate with molecular, clinical, or HER2-related state annotations.
 
 ### Methods Overview
 
@@ -843,10 +868,11 @@ Evaluate whether GigaTIME-derived virtual mIF features from TCGA-BRCA H&E slides
 6. Perform indirect validation against RNA-seq immune and proliferation signatures.
 7. Generate visual QC panels and virtual mIF composites for interpretability.
 8. Train cross-validated slide-level classifier baselines and evaluate diagnostic-model failure modes.
+9. If data permits, test whether image-derived features associate with ERBB2 transcript-level, isoform-aware, targetability-related, or therapy-response evidence.
 
 ### Expected Contribution
 
-This study would not claim that GigaTIME diagnoses HER2 status. Instead, it would evaluate whether a released virtual mIF model can produce biologically interpretable immune microenvironment features from public breast cancer H&E slides and whether those features vary across clinically meaningful HER2 categories.
+This study would not claim that GigaTIME diagnoses HER2 status or detects HER2 isoforms. Instead, it would evaluate whether a released virtual mIF model can produce biologically interpretable tissue and immune-context features from public breast cancer H&E slides, whether those features vary across clinically meaningful HER2 categories, and whether they can be developed into hypotheses about HER2-related biological state.
 
 ## Current Limitations to State Clearly
 
@@ -858,6 +884,7 @@ This study would not claim that GigaTIME diagnoses HER2 status. Instead, it woul
 - No matched real mIF validation data is currently present in this project.
 - GigaTIME predictions are research features, not clinical measurements.
 - The first classifier baseline is very small and should not be interpreted as diagnostic performance.
+- The current data do not prove HER2 isoform state, targetability, or therapy resistance. Those are future hypotheses requiring molecular, protein-level, and treatment-response validation.
 - Whole-slide sampling, tile quality, tumor purity, and batch/stain variation need stronger QC.
 
 ## Reproducibility Checklist

@@ -100,6 +100,20 @@ Interpretation:
 - Full three-class prediction is at chance.
 - ERBB2 RNA, included as a non-H&E reference, classified HER2-positive versus HER2-negative better than GigaTIME/H&E features. This means the labels contain molecular signal, but the current image-derived features are not capturing the clinical HER2-positive signal reliably.
 
+## Sharper Paper Angle: HER2 State, Not Only HER2 Amount
+
+The strongest proposal framing is not simply "use image AI to classify HER2." A more interesting biology question is whether H&E-derived and GigaTIME-derived features predict or associate with HER2-related molecular states that are not fully captured by the routine clinical HER2-positive, HER2-low, and HER2-zero labels.
+
+Especially interesting future hypotheses include:
+
+- HER2-low versus HER2-zero tumors with hidden or alternate ERBB2 transcript/isoform expression.
+- HER2-positive tumors with image-derived states associated with trastuzumab or antibody-drug conjugate resistance.
+- Tumors with preserved HER2 signaling but reduced antibody targetability.
+
+This must be worded carefully. The current project can say that image AI predicts or associates with HER2 isoform/state hypotheses. It should not say that image AI detects HER2 isoforms. Isoform claims require transcript-level or protein-level validation beyond the current GigaTIME/H&E pilot.
+
+See `docs/her2_isoform_state_hypothesis.md` for the working language guardrails and validation plan.
+
 ## Why This Is a Good First Step
 
 - It is replication-first: the model is not retrained, only applied to public TCGA-BRCA data.
@@ -115,6 +129,7 @@ Interpretation:
 - The 256-tile rerun supports robustness to denser sampling, but it is still not exhaustive whole-slide analysis.
 - Bulk RNA-seq is an indirect validation layer and did not strongly validate the current GigaTIME immune-channel pattern, even with broader RNA programs.
 - The first classifier baseline is not clinically usable; it is a feasibility and failure-mode analysis.
+- The current pilot does not demonstrate HER2 isoform detection. It only motivates future testing of whether image-derived features associate with HER2 state, targetability, or transcript-level biology.
 - Visual QC supports that the signal is not just blank background, but it is not biological validation.
 - TCGA slide quality, tissue sampling, and tumor purity need QC before strong biological claims.
 - GigaTIME is research-only and not a clinical HER2 classifier.

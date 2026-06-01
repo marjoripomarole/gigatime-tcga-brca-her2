@@ -154,6 +154,20 @@ HER2-positive versus HER2-negative performance remained weak. CK-enriched top 25
 
 See `docs/clinical_her2_cleaned_classifier_comparison.md`.
 
+## Reframed Scientific Direction
+
+The next proposal angle should be broader than "can the model classify HER2?" A stronger scientific question is whether image-derived GigaTIME features predict or associate with HER2-related biological states.
+
+The especially interesting hypotheses are:
+
+- HER2-low versus HER2-zero tumors with hidden or alternate ERBB2 transcript/isoform expression.
+- HER2-positive tumors with image-derived states associated with trastuzumab or antibody-drug conjugate resistance.
+- Tumors with preserved HER2 pathway signaling but reduced antibody targetability.
+
+The current pilot does not prove any of these. It only suggests that the HER2-low versus HER2-zero boundary may have an image-derived tissue-context signal worth validating. We should say that image AI predicts or associates with HER2 isoform/state hypotheses, not that image AI detects HER2 isoforms.
+
+See `docs/her2_isoform_state_hypothesis.md`.
+
 ## Visual QC Check
 
 The first visual QC pass selected the top `CD68` + `PD-L1` + `CD11c` case from each HER2 group:
@@ -210,4 +224,4 @@ conda run -n gigatime-tcga python scripts/run_gigatime_tcga_brca.py \
 
 ## Caveat
 
-This is still a pilot, not a definitive biological result. It is stronger than the first ERBB2-expression proof-of-work because it uses clinical HER2 groups and a balanced 10/10/10 design. The 256-tile rerun strengthens the sampling robustness argument, but both marker-level and broader RNA-program validation remain weak. The first classifier baseline is useful but not clinically reliable. The next scientific step is pathologist review, tumor-rich tile selection, stronger tissue QC, tumor-purity or immune-deconvolution adjustment, and ideally an external dataset with real mIF.
+This is still a pilot, not a definitive biological result. It is stronger than the first ERBB2-expression proof-of-work because it uses clinical HER2 groups and a balanced 10/10/10 design. The 256-tile rerun strengthens the sampling robustness argument, but both marker-level and broader RNA-program validation remain weak. The first classifier baseline is useful but not clinically reliable. The next scientific step is pathologist review, tumor-rich tile selection, stronger tissue QC, tumor-purity or immune-deconvolution adjustment, transcript/isoform-aware HER2 validation if available, and ideally an external dataset with real mIF or therapy-response data.
