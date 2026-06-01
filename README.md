@@ -16,6 +16,7 @@ The goal is to generate virtual multiplex immunofluorescence (mIF) features from
 - `scripts/summarize_clinical_her2_gigatime.py`: compares GigaTIME virtual mIF outputs across clinical HER2-positive/HER2-low/HER2-zero groups.
 - `scripts/validate_gigatime_with_rna_signatures.py`: compares GigaTIME virtual channels with matched RNA-seq marker signatures as an indirect validation check.
 - `scripts/validate_gigatime_with_rna_programs.py`: compares GigaTIME virtual composite programs with broader RNA immune and tissue programs.
+- `scripts/download_selected_star_counts.py`: downloads STAR-count RNA-seq files for a selected case list and extracts ERBB2 expression.
 - `scripts/cleanup_gigatime_tile_features.py`: builds pre-classifier cleaned GigaTIME feature views from cellular and CK-enriched tile subsets.
 - `scripts/train_her2_classifier_baseline.py`: trains first slide-level HER2 classifier baselines from GigaTIME features with leave-one-out cross-validation.
 - `scripts/train_her2_cleaned_classifier_comparison.py`: reruns HER2 classifiers across all-tissue, cellular-tissue, and CK-enriched GigaTIME feature views.
@@ -35,6 +36,7 @@ The goal is to generate virtual multiplex immunofluorescence (mIF) features from
 - `docs/clinical_her2_gigatime_data_cleanup.md`: pre-classifier tile cleanup using cellular tissue and virtual CK-enriched GigaTIME views.
 - `docs/clinical_her2_classifier_baseline.md`: first diagnostic-model style classifier baseline for HER2-positive/negative, HER2-low/zero, and three-class HER2 prediction.
 - `docs/clinical_her2_cleaned_classifier_comparison.md`: classifier comparison after GigaTIME tile cleanup and CK-enriched feature selection.
+- `docs/clinical_her2_expanded20_results.md`: presentation-oriented summary of the expanded 20/20/20 clinical HER2 run.
 - `docs/her2_isoform_state_hypothesis.md`: sharper paper-proposal framing around HER2 state, isoform hypotheses, targetability, and language guardrails.
 - `docs/advisor_brief.md`: concise project framing and discussion points.
 - `docs/current_pilot_run.md`: current two-case run status and advisor-facing caveats.

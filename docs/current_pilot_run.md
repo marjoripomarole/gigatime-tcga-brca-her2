@@ -16,6 +16,24 @@ The current workspace contains a completed TCGA-BRCA GigaTIME pilot on a balance
 
 The HER2 group labels come from `data/tcga_brca/clinical_her2_labels.csv`, which was built from TCGA-BRCA clinical HER2 IHC/ISH fields. The selected 30-case cohort is recorded in `data/tcga_brca/clinical_her2_cohort_cases.csv` and summarized in `docs/clinical_her2_cohort_selection.md`.
 
+## Expanded 20/20/20 Run
+
+An expanded clinical HER2 run is now complete:
+
+- HER2-positive cases processed: 20
+- HER2-low cases processed: 20
+- HER2-zero cases processed: 20
+- Slides processed: 60
+- Tile sampling: up to 256 random tissue tiles per slide
+- Total tile predictions: 15,225
+- Matched STAR-count RNA-seq expression downloaded for all 60 selected cases
+
+The expanded run strengthened the HER2-low versus HER2-zero finding. Several all-tissue and QC-cellular virtual immune/myeloid/checkpoint channels now pass within-view BH correction for the HER2-low versus HER2-zero pairwise comparison. The HER2-low versus HER2-zero classifier also remained at about 0.80 balanced accuracy in the expanded 40-case binary comparison.
+
+The three-group interpretation became more nuanced: HER2-low is often the lowest virtual immune/checkpoint group, while HER2-positive becomes highest for several broader virtual immune programs. RNA validation remains weak, so this is still hypothesis-generating.
+
+See `docs/clinical_her2_expanded20_results.md`.
+
 ## Main Outputs
 
 - `data/tcga_brca/clinical_her2_labels.csv`
@@ -42,6 +60,12 @@ The HER2 group labels come from `data/tcga_brca/clinical_her2_labels.csv`, which
 - `docs/assets/clinical_her2_rna_program_validation/`
 - `docs/assets/clinical_her2_classifier_baseline/`
 - `docs/assets/clinical_her2_visual_qc_tile256/`
+- `data/tcga_brca/clinical_her2_cohort_expanded20_cases.csv`
+- `data/tcga_brca/erbb2_expression_expanded20.csv`
+- `results/gigatime_tcga_brca_clinical_her2_expanded20_tile256/`
+- `docs/clinical_her2_expanded20_results.md`
+- `docs/assets/clinical_her2_expanded20_gigatime_cleanup/`
+- `docs/assets/clinical_her2_expanded20_cleaned_classifier/`
 
 The earlier ERBB2-high versus ERBB2-low pilot outputs are still present under `results/gigatime_tcga_brca_extremes/`, and the documentation-facing virtual mIF images are still under:
 
@@ -224,4 +248,4 @@ conda run -n gigatime-tcga python scripts/run_gigatime_tcga_brca.py \
 
 ## Caveat
 
-This is still a pilot, not a definitive biological result. It is stronger than the first ERBB2-expression proof-of-work because it uses clinical HER2 groups and a balanced 10/10/10 design. The 256-tile rerun strengthens the sampling robustness argument, but both marker-level and broader RNA-program validation remain weak. The first classifier baseline is useful but not clinically reliable. The next scientific step is pathologist review, tumor-rich tile selection, stronger tissue QC, tumor-purity or immune-deconvolution adjustment, transcript/isoform-aware HER2 validation if available, and ideally an external dataset with real mIF or therapy-response data.
+This is still a pilot, not a definitive biological result. It is stronger than the first ERBB2-expression proof-of-work because it uses clinical HER2 groups and now includes both the original balanced 10/10/10 run and an expanded balanced 20/20/20 run. The expanded run strengthens the HER2-low versus HER2-zero image-signal argument, but marker-level and broader RNA-program validation remain weak. The classifier baselines are useful but not clinically reliable. The next scientific step is pathologist review, tumor-rich tile selection, stronger tissue QC, tumor-purity or immune-deconvolution adjustment, transcript/isoform-aware HER2 validation if available, and ideally an external dataset with real mIF or therapy-response data.

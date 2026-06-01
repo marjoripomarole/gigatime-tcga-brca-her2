@@ -393,7 +393,10 @@ def markdown_table(headers: list[str], rows: list[list[str]]) -> str:
     return "\n".join(lines)
 
 
-def write_markdown(path: Path, metrics, feature_metadata: dict[str, list[str]]) -> None:
+def write_markdown(path: Path, metrics, feature_metadata: dict[str, list[str]], out_dir: Path) -> None:
+    def output_link(filename: str) -> str:
+        return os.path.relpath(out_dir / filename, path.parent).replace(os.sep, "/")
+
     logistic = metrics.loc[metrics["model"] == "regularized_logistic"].copy()
     best = (
         logistic.sort_values(["task", "balanced_accuracy"], ascending=[True, False])
@@ -401,12 +404,13 @@ def write_markdown(path: Path, metrics, feature_metadata: dict[str, list[str]]) 
         .head(1)
     )
     all_rows = logistic.sort_values(["task", "balanced_accuracy"], ascending=[True, False])
+    max_n_cases = int(metrics["n_cases"].max()) if "n_cases" in metrics.columns and not metrics.empty else 0
     lines = [
         "# Clinical HER2 Classifier Baseline",
         "",
         "This is the first diagnostic-model style analysis in the project. It uses slide-level GigaTIME features to predict clinical HER2 labels with leave-one-out cross-validation.",
         "",
-        "Important: this is a tiny 30-case pilot. These results are useful for feasibility and failure-mode analysis, not for clinical diagnosis.",
+        f"Important: this is a small {max_n_cases}-case pilot. These results are useful for feasibility and failure-mode analysis, not for clinical diagnosis.",
         "",
         "## Tasks",
         "",
@@ -457,12 +461,12 @@ def write_markdown(path: Path, metrics, feature_metadata: dict[str, list[str]]) 
                 ],
             ),
             "",
-            "![Classifier balanced accuracy](assets/clinical_her2_classifier_baseline/classifier_balanced_accuracy.png)",
+            f"![Classifier balanced accuracy]({output_link('classifier_balanced_accuracy.png')})",
             "",
             "## Interpretation Guardrails",
             "",
             "- Every prediction is cross-validated: the tested slide was left out of training.",
-            "- The cohort is only 30 cases, so estimates can move a lot when cases are added.",
+            f"- The cohort is only {max_n_cases} cases, so estimates can move a lot when cases are added.",
             "- HER2-low versus HER2-zero is especially difficult because the clinical boundary between IHC 0 and 1+ is subtle and noisy.",
             "- ERBB2 RNA is included only as a non-H&E reference. It should not be confused with an image-based diagnostic model.",
             "- If the GigaTIME-only feature sets do not perform well, the next step is not to claim failure; it is to improve tumor-region selection, add tile-level models, and validate on more cases.",
@@ -498,7 +502,7 @@ def main() -> int:
 
     plot_performance(plt, sns, metrics, out_dir)
     plot_confusion_matrices(plt, sns, pd, predictions, metrics, task_lookup, out_dir)
-    write_markdown(out_dir / "classifier_baseline_summary.md", metrics, feature_sets)
+    write_markdown(out_dir / "classifier_baseline_summary.md", metrics, feature_sets, out_dir)
     print(f"Wrote classifier baseline outputs to {out_dir}")
     return 0
 

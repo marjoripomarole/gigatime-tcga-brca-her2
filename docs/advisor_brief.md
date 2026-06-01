@@ -100,6 +100,21 @@ Interpretation:
 - Full three-class prediction is at chance.
 - ERBB2 RNA, included as a non-H&E reference, classified HER2-positive versus HER2-negative better than GigaTIME/H&E features. This means the labels contain molecular signal, but the current image-derived features are not capturing the clinical HER2-positive signal reliably.
 
+## Expanded 20/20/20 Update
+
+We expanded the balanced clinical HER2 run from 30 slides to 60 slides: 20 HER2-positive, 20 HER2-low, and 20 HER2-zero. The expanded GigaTIME run used up to 256 tissue tiles per slide and produced 15,225 tile predictions. STAR-count RNA-seq expression was downloaded for all 60 selected cases.
+
+The strongest expanded result is that the HER2-low versus HER2-zero signal became more convincing:
+
+- All sampled tissue HER2-low versus HER2-zero classifier: balanced accuracy 0.800, macro AUC 0.820.
+- QC-cellular classifier: balanced accuracy 0.775, macro AUC 0.820.
+- CK-enriched top 25% classifier: balanced accuracy 0.800, macro AUC 0.820.
+- Pairwise HER2-low versus HER2-zero differences now pass within-view BH correction for several virtual immune/myeloid/checkpoint channels, especially `CD3`, `CD4`, `CD11c`, and `CD68`; `PD-L1` passes in the QC-cellular view.
+
+The expanded three-group pattern is more nuanced than the first 30-slide run. HER2-low is often the lowest virtual immune/checkpoint group, but HER2-positive is highest for several broader virtual immune programs. RNA validation remains weak, so the result should still be presented as an image-derived, hypothesis-generating HER2-state association.
+
+See `docs/clinical_her2_expanded20_results.md`.
+
 ## Sharper Paper Angle: HER2 State, Not Only HER2 Amount
 
 The strongest proposal framing is not simply "use image AI to classify HER2." A more interesting biology question is whether H&E-derived and GigaTIME-derived features predict or associate with HER2-related molecular states that are not fully captured by the routine clinical HER2-positive, HER2-low, and HER2-zero labels.

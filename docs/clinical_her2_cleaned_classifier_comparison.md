@@ -2,7 +2,7 @@
 
 This analysis reruns the slide-level HER2 classifier after cleaning the GigaTIME tile inputs. It compares all sampled tissue against cellular and virtual CK-enriched feature views.
 
-Every prediction is leave-one-out cross-validated. This remains a 30-case pilot, not a clinical model.
+Every prediction is leave-one-out cross-validated. This remains a small 30-case pilot, not a clinical model.
 
 ## Feature Views
 
@@ -61,7 +61,7 @@ Virtual CK and DAPI are GigaTIME predictions, not real stains or pathologist tum
 - All sampled tissue HER2-low versus HER2-zero balanced accuracy: 0.800, macro AUC: 0.870.
 - QC cellular tissue preserved the HER2-low versus HER2-zero result: balanced accuracy 0.800, macro AUC 0.900.
 - CK-enriched top 50% reduced HER2-low versus HER2-zero performance to balanced accuracy 0.650.
-- CK-enriched top 25% also reduced HER2-low versus HER2-zero performance to balanced accuracy 0.650.
+- CK-enriched top 25% HER2-low versus HER2-zero balanced accuracy was 0.650.
 - CK-enriched top 25% modestly improved HER2-positive versus HER2-negative balanced accuracy to 0.550, but sensitivity remained low at 0.200.
 
 ## ERBB2 RNA Reference

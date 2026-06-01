@@ -315,7 +315,7 @@ def write_markdown(path: Path, joined, channel_summary, pairwise_tests, channels
             "- Clinical HER2 labels are based on TCGA IHC/ISH clinical supplement fields.",
             "- GigaTIME outputs are virtual mIF research features, not experimental mIF measurements.",
             "- Small per-group counts should be interpreted as pilot evidence only.",
-            "- The full planned cohort is 10 HER2-positive, 10 HER2-low, and 10 HER2-zero cases; missing slide downloads can limit the current joined set.",
+            "- The group counts above reflect the current joined slide set; missing slide downloads can limit a planned cohort.",
         ]
     )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

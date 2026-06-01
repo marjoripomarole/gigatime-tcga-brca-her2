@@ -192,6 +192,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out-markdown", default="docs/clinical_her2_cohort_selection.md")
     parser.add_argument("--per-group", type=int, default=10)
     parser.add_argument("--groups", default=",".join(HER2_GROUPS))
+    parser.add_argument(
+        "--allow-missing-expression",
+        action="store_true",
+        help="Select cases with clinical HER2 labels and slides even when ERBB2 RNA has not been downloaded yet.",
+    )
     return parser.parse_args()
 
 
@@ -236,7 +241,8 @@ def main() -> int:
         }
     )
 
-    candidates = labels.merge(expression, on="case_submitter_id", how="inner").merge(
+    expression_join = "left" if args.allow_missing_expression else "inner"
+    candidates = labels.merge(expression, on="case_submitter_id", how=expression_join).merge(
         slides,
         on="case_submitter_id",
         how="inner",

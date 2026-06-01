@@ -44,6 +44,11 @@ def parse_args() -> argparse.Namespace:
         default="docs/assets/clinical_her2_gigatime_cleanup",
         help="Directory for tracked cleanup figures.",
     )
+    parser.add_argument(
+        "--out-markdown",
+        default="docs/clinical_her2_gigatime_data_cleanup.md",
+        help="Documentation markdown path to write in addition to the result-directory summary.",
+    )
     parser.add_argument("--min-tissue-fraction", type=float, default=0.70)
     parser.add_argument("--min-dapi", type=float, default=0.05)
     return parser.parse_args()
@@ -476,6 +481,11 @@ def fmt(value: float, digits: int = 3) -> str:
 
 
 def write_summary(path: Path, retention, channel_summary, pairwise_tests, args: argparse.Namespace) -> None:
+    asset_dir = Path(args.asset_dir)
+
+    def asset_link(filename: str) -> str:
+        return os.path.relpath(asset_dir / filename, path.parent).replace(os.sep, "/")
+
     retention_rows = []
     for view in FILTER_ORDER:
         subset = retention.loc[retention["feature_view"] == view]
@@ -550,17 +560,17 @@ def write_summary(path: Path, retention, channel_summary, pairwise_tests, args: 
             retention_rows,
         ),
         "",
-        "![Tile retention by cleanup view](assets/clinical_her2_gigatime_cleanup/cleanup_retained_tiles_by_filter.png)",
+        f"![Tile retention by cleanup view]({asset_link('cleanup_retained_tiles_by_filter.png')})",
         "",
         "## Tile-Level Cleanup Map",
         "",
         "This plot shows how the cleanup rules move from broad tissue tiles toward cellular, CK-enriched tiles.",
         "",
-        "![CK and DAPI tile distribution](assets/clinical_her2_gigatime_cleanup/cleanup_ck_dapi_distribution.png)",
+        f"![CK and DAPI tile distribution]({asset_link('cleanup_ck_dapi_distribution.png')})",
         "",
         "## Group Means After Cleanup",
         "",
-        "![Cleaned GigaTIME group mean heatmap](assets/clinical_her2_gigatime_cleanup/cleanup_key_channel_heatmap.png)",
+        f"![Cleaned GigaTIME group mean heatmap]({asset_link('cleanup_key_channel_heatmap.png')})",
         "",
         "## Top Three-Group Signals Across Cleanup Views",
         "",
@@ -578,7 +588,7 @@ def write_summary(path: Path, retention, channel_summary, pairwise_tests, args: 
             focus_rows,
         ),
         "",
-        "![Key channel boxplots after cleanup](assets/clinical_her2_gigatime_cleanup/cleanup_key_channel_boxplots.png)",
+        f"![Key channel boxplots after cleanup]({asset_link('cleanup_key_channel_boxplots.png')})",
         "",
         "## Interpretation",
         "",
@@ -626,7 +636,7 @@ def main() -> int:
     plot_key_channel_heatmap(pd, plt, sns, channel_summary, asset_dir)
     plot_key_channel_boxplots(pd, plt, sns, slide_features, asset_dir)
     write_summary(out_dir / "cleanup_summary.md", retention, channel_summary, pairwise_tests, args)
-    write_summary(Path("docs/clinical_her2_gigatime_data_cleanup.md"), retention, channel_summary, pairwise_tests, args)
+    write_summary(Path(args.out_markdown), retention, channel_summary, pairwise_tests, args)
     print(f"Wrote cleanup outputs to {out_dir}")
     print(f"Wrote cleanup figures to {asset_dir}")
     return 0

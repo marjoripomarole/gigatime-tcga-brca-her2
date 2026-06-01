@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -72,6 +73,11 @@ def parse_args() -> argparse.Namespace:
         default="results/gigatime_tcga_brca_clinical_her2_tile256/cleaned_classifier_comparison",
     )
     parser.add_argument("--asset-dir", default="docs/assets/clinical_her2_cleaned_classifier")
+    parser.add_argument(
+        "--out-markdown",
+        default="docs/clinical_her2_cleaned_classifier_comparison.md",
+        help="Documentation markdown path to write in addition to the result-directory summary.",
+    )
     parser.add_argument("--l2-penalty", type=float, default=1.0)
     return parser.parse_args()
 
@@ -267,7 +273,18 @@ def markdown_table(headers: list[str], rows: list[list[str]]) -> str:
     return "\n".join(lines)
 
 
-def write_summary(path: Path, metrics, best_h_e, best_ref, feature_sets_by_view: dict[str, dict[str, list[str]]]) -> None:
+def write_summary(
+    path: Path,
+    metrics,
+    best_h_e,
+    best_ref,
+    feature_sets_by_view: dict[str, dict[str, list[str]]],
+    out_dir: Path,
+    asset_dir: Path,
+) -> None:
+    def asset_link(filename: str) -> str:
+        return os.path.relpath(asset_dir / filename, path.parent).replace(os.sep, "/")
+
     best_rows = []
     for _, row in best_h_e.iterrows():
         best_rows.append(
@@ -324,13 +341,14 @@ def write_summary(path: Path, metrics, best_h_e, best_ref, feature_sets_by_view:
     first_view = next(iter(feature_sets_by_view))
     for name, cols in feature_sets_by_view[first_view].items():
         feature_rows.append([FEATURE_LABELS.get(name, name), str(len(cols))])
+    max_n_cases = int(metrics["n_cases"].max()) if "n_cases" in metrics.columns and not metrics.empty else 0
 
     lines = [
         "# Cleaned GigaTIME HER2 Classifier Comparison",
         "",
         "This analysis reruns the slide-level HER2 classifier after cleaning the GigaTIME tile inputs. It compares all sampled tissue against cellular and virtual CK-enriched feature views.",
         "",
-        "Every prediction is leave-one-out cross-validated. This remains a 30-case pilot, not a clinical model.",
+        f"Every prediction is leave-one-out cross-validated. This remains a small {max_n_cases}-case pilot, not a clinical model.",
         "",
         "## Feature Views",
         "",
@@ -362,7 +380,7 @@ def write_summary(path: Path, metrics, best_h_e, best_ref, feature_sets_by_view:
             best_rows,
         ),
         "",
-        "![Best classifier by cleanup view](assets/clinical_her2_cleaned_classifier/cleaned_classifier_best_by_view.png)",
+        f"![Best classifier by cleanup view]({asset_link('cleaned_classifier_best_by_view.png')})",
         "",
         "## HER2-Low Versus HER2-Zero Focus",
         "",
@@ -371,9 +389,9 @@ def write_summary(path: Path, metrics, best_h_e, best_ref, feature_sets_by_view:
             low_zero_rows,
         ),
         "",
-        "![HER2-low versus HER2-zero feature-set comparison](assets/clinical_her2_cleaned_classifier/cleaned_classifier_low_zero_feature_sets.png)",
+        f"![HER2-low versus HER2-zero feature-set comparison]({asset_link('cleaned_classifier_low_zero_feature_sets.png')})",
         "",
-        "![HER2-low versus HER2-zero confusion matrices](assets/clinical_her2_cleaned_classifier/cleaned_classifier_low_zero_confusions.png)",
+        f"![HER2-low versus HER2-zero confusion matrices]({asset_link('cleaned_classifier_low_zero_confusions.png')})",
         "",
         "## Main Result",
         "",
@@ -395,7 +413,7 @@ def write_summary(path: Path, metrics, best_h_e, best_ref, feature_sets_by_view:
             else "- CK-enriched top 50% result was not available."
         ),
         (
-            f"- CK-enriched top 25% also reduced HER2-low versus HER2-zero performance to balanced accuracy {fmt(float(ck25_low_zero['balanced_accuracy']))}."
+            f"- CK-enriched top 25% HER2-low versus HER2-zero balanced accuracy was {fmt(float(ck25_low_zero['balanced_accuracy']))}."
             if ck25_low_zero is not None
             else "- CK-enriched top 25% result was not available."
         ),
@@ -422,10 +440,10 @@ def write_summary(path: Path, metrics, best_h_e, best_ref, feature_sets_by_view:
         "",
         "## Outputs",
         "",
-        "- `results/gigatime_tcga_brca_clinical_her2_tile256/cleaned_classifier_comparison/cleaned_classifier_predictions.csv`",
-        "- `results/gigatime_tcga_brca_clinical_her2_tile256/cleaned_classifier_comparison/cleaned_classifier_metrics.csv`",
-        "- `results/gigatime_tcga_brca_clinical_her2_tile256/cleaned_classifier_comparison/cleaned_classifier_confusion_matrices.csv`",
-        "- `docs/assets/clinical_her2_cleaned_classifier/`",
+        f"- `{out_dir / 'cleaned_classifier_predictions.csv'}`",
+        f"- `{out_dir / 'cleaned_classifier_metrics.csv'}`",
+        f"- `{out_dir / 'cleaned_classifier_confusion_matrices.csv'}`",
+        f"- `{asset_dir}/`",
     ]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -469,13 +487,15 @@ def main() -> int:
     plot_best_by_view(plt, sns, best_h_e, asset_dir)
     plot_low_zero_feature_sets(plt, sns, metrics, asset_dir)
     plot_low_zero_confusions(plt, sns, pd, predictions, best_h_e, asset_dir)
-    write_summary(out_dir / "cleaned_classifier_summary.md", metrics, best_h_e, best_ref, feature_sets_by_view)
+    write_summary(out_dir / "cleaned_classifier_summary.md", metrics, best_h_e, best_ref, feature_sets_by_view, out_dir, asset_dir)
     write_summary(
-        Path("docs/clinical_her2_cleaned_classifier_comparison.md"),
+        Path(args.out_markdown),
         metrics,
         best_h_e,
         best_ref,
         feature_sets_by_view,
+        out_dir,
+        asset_dir,
     )
     print(f"Wrote cleaned classifier outputs to {out_dir}")
     print(f"Wrote cleaned classifier figures to {asset_dir}")
