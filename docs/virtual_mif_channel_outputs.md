@@ -1,6 +1,8 @@
 # Virtual mIF Channel Image Outputs
 
-This document explains the images generated from the GigaTIME virtual multiplex immunofluorescence channel predictions.
+This document explains the documentation-facing images generated from the GigaTIME virtual multiplex immunofluorescence channel predictions.
+
+These image assets were originally generated from the ERBB2-high versus ERBB2-low pilot outputs. They remain useful for explaining what GigaTIME virtual channels look like, but the current main statistical result is the 30-slide clinical HER2-positive / HER2-low / HER2-zero analysis described in `docs/clinical_her2_gigatime_run.md`.
 
 The images are based on existing GigaTIME outputs in:
 
@@ -91,4 +93,5 @@ Comparing this with the HER2-high reference grid gives a qualitative visual chec
 - These images show GigaTIME predictions, not experimental mIF measurements.
 - The TCGA-BRCA slides used here do not currently have matched real mIF data in this project.
 - The spatial maps show only the sampled tiles processed by the pilot run, not every possible tile in each whole-slide image.
-- The current cohort is still small, so the images are best used for workflow inspection, advisor discussion, and planning the full 20 high / 20 low ERBB2-extreme run.
+- These specific visual assets come from the earlier ERBB2-expression pilot, not the full 30-slide clinical HER2 summary.
+- The current 30-slide clinical HER2 pilot is still small, so both the images and statistics should be used for workflow inspection, advisor discussion, and validation planning rather than definitive claims.

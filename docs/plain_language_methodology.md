@@ -2,7 +2,7 @@
 
 This document explains what has been done in this project so far for a reader who does not have a genetics, pathology, or computational biology background.
 
-The short version is: this project takes public breast cancer microscope images, runs an existing artificial intelligence model called GigaTIME on small pieces of those images, and compares the model's immune-marker predictions with the activity level of a breast cancer gene called `ERBB2`, which is the gene connected to HER2 biology.
+The short version is: this project takes public breast cancer microscope images, runs an existing artificial intelligence model called GigaTIME on small pieces of those images, and compares the model's predicted immune-marker patterns across clinically defined HER2 groups.
 
 This is an early research pilot. It is not a clinical test, not a diagnostic tool, and not a new AI model.
 
@@ -10,49 +10,44 @@ This is an early research pilot. It is not a clinical test, not a diagnostic too
 
 The current working question is:
 
-Can the released GigaTIME model generate interpretable immune-environment features from public TCGA breast cancer H&E pathology slides, and do those features look different between tumors with high versus low `ERBB2` expression?
+Can the released GigaTIME model generate interpretable immune-environment features from public TCGA breast cancer H&E pathology slides, and do those predicted features look different between HER2-positive, HER2-low, and HER2-zero tumors?
 
 In plainer terms:
 
 - We have breast cancer tissue images.
-- We have a separate measurement of how active the `ERBB2` gene is in those tumors.
+- We have clinical HER2 information from TCGA clinical records.
 - We use an existing AI model to estimate immune and tumor marker patterns from the tissue images.
-- We ask whether the image-derived marker patterns differ between tumors with high `ERBB2` activity and tumors with low `ERBB2` activity.
+- We ask whether those image-derived marker patterns differ across HER2-positive, HER2-low, and HER2-zero breast cancers.
 
-This is a replication/adaptation pilot. The project does not train a new model. It applies a previously released model to a new breast cancer use case.
+This is a replication/adaptation pilot. The project does not train a new model. It applies a previously released model to a breast cancer research question.
 
 ## 2. Biological Background Without Assuming Genetics Knowledge
 
-### What is DNA, a gene, and gene expression?
+### What is HER2?
 
-DNA is the instruction library inside cells. A gene is one instruction unit inside that library.
+HER2 is a protein that can be present on the surface of breast cancer cells. In some tumors, HER2 is strongly present or amplified. That can affect tumor biology and treatment options.
 
-Cells do not use every gene equally. Some genes are very active in a cell, while others are quiet. When a gene is active, the cell makes RNA copies from that gene. Measuring RNA is one common way to estimate how active a gene is. This is called gene expression.
+HER2 status is usually assessed in clinical pathology using protein or gene-copy tests:
 
-In this project, the relevant gene is `ERBB2`.
+- IHC, or immunohistochemistry, estimates how much HER2 protein is visible in the tumor tissue.
+- ISH/FISH, or in situ hybridization, checks whether the HER2 gene region is amplified.
 
-### What is HER2, and how is it related to ERBB2?
+### What are HER2-positive, HER2-low, and HER2-zero?
 
-HER2 is a protein found on the surface of some breast cancer cells. In some tumors, there is too much HER2 activity. This matters clinically because HER2 can influence tumor behavior and treatment choices.
+For this project, the groups are defined from TCGA clinical HER2 fields:
+
+- `HER2-positive`: IHC `3+`, ISH positive, or a positive HER2 receptor status when more detailed fields are missing.
+- `HER2-low`: IHC `1+`, or IHC `2+` with ISH negative.
+- `HER2-zero`: IHC `0` with no positive ISH evidence.
+- `HER2-unknown`: missing, not evaluated, equivocal, contradictory, or incomplete fields.
+
+This distinction matters because HER2-low and HER2-zero can be biologically and clinically different, even though both are not classic HER2-positive disease.
+
+### What is ERBB2?
 
 `ERBB2` is the gene that contains the instructions for making the HER2 protein.
 
-Important distinction:
-
-- `ERBB2` is the gene.
-- HER2 is the protein and clinical biology associated with that gene.
-- This project currently uses `ERBB2` RNA expression as a proxy for HER2-related biology.
-- This project does not yet use official clinical HER2 labels from immunohistochemistry or FISH testing.
-
-So when this project says "HER2-high" and "HER2-low", it currently means high or low `ERBB2` RNA expression in the available TCGA data. It does not mean a confirmed clinical HER2-positive or HER2-negative diagnosis.
-
-### What is RNA-seq and TPM?
-
-RNA-seq is a laboratory method that measures RNA molecules in a tissue sample. It gives an estimate of which genes are active and how active they are.
-
-TPM means "transcripts per million." It is a normalized number used to compare gene expression levels. A higher TPM for `ERBB2` means the tumor sample had more RNA from the `ERBB2` gene.
-
-In this project, the file `data/tcga_brca/erbb2_expression.csv` stores the extracted `ERBB2` TPM values.
+At the start of this project, `ERBB2` RNA expression was used as a first HER2-biology proxy. That was useful for building the pipeline, but RNA expression is not the same as clinical HER2 status. The current better analysis uses clinical IHC/ISH-derived HER2 groups.
 
 ## 3. Pathology Background Without Assuming Medical Training
 
@@ -71,11 +66,11 @@ In this project, the H&E slides are digital whole-slide images. A whole-slide im
 
 Whole-slide images are huge. An AI model usually cannot process the entire image at once.
 
-So the workflow cuts each slide into many small square image patches called tiles. In this project, the GigaTIME inference script uses 256 by 256 pixel tiles by default.
+So the workflow cuts each slide into many small image patches called tiles. The GigaTIME inference script uses 256 by 256 pixel tiles by default.
 
-Not every tile is useful. Some areas may be blank background or have little tissue. The script estimates the tissue fraction of each tile and keeps tiles that pass a minimum tissue threshold.
+Not every tile is useful. Some areas are blank background or have little tissue. The script estimates the tissue fraction of each tile and keeps tiles that pass a minimum tissue threshold.
 
-For the current ERBB2-extreme pilot run, the workflow processed 64 random tissue tiles per slide.
+For the current clinical HER2 pilot, the workflow processed 64 random tissue tiles per slide.
 
 ## 4. What is GigaTIME?
 
@@ -93,15 +88,15 @@ GigaTIME predicts 23 channels:
 
 `DAPI`, `TRITC`, `Cy5`, `PD-1`, `CD14`, `CD4`, `T-bet`, `CD34`, `CD68`, `CD16`, `CD11c`, `CD138`, `CD20`, `CD3`, `CD8`, `PD-L1`, `CK`, `Ki67`, `Tryptase`, `Actin-D`, `Caspase3-D`, `PHH3-B`, and `Transgelin`.
 
-For the summary analysis, the current project focuses on a smaller set of interpretable channels:
+For the clinical HER2 summary analysis, the project focuses on a smaller set of interpretable channels:
 
 `CD3`, `CD8`, `CD4`, `CD20`, `CD68`, `CD11c`, `PD-1`, `PD-L1`, `CK`, and `Ki67`.
 
 Very roughly:
 
 - `CD3`, `CD4`, and `CD8` relate to T cells, a type of immune cell.
-- `CD20` relates to B cells, another immune cell type.
-- `CD68` relates to macrophage-like immune cells.
+- `CD20` relates to B cells.
+- `CD68` and `CD11c` relate to macrophage/myeloid immune biology.
 - `PD-1` and `PD-L1` relate to immune checkpoint biology.
 - `CK` relates to epithelial/tumor-cell structure.
 - `Ki67` relates to cell proliferation.
@@ -116,33 +111,23 @@ TCGA means The Cancer Genome Atlas. It is a large public cancer research dataset
 
 BRCA is TCGA's breast cancer project. In this context, BRCA means breast invasive carcinoma; it is not the same thing as the `BRCA1` or `BRCA2` genes.
 
-This project uses two kinds of TCGA-BRCA data from the Genomic Data Commons, or GDC:
+This project uses three kinds of TCGA-BRCA data from the Genomic Data Commons, or GDC:
 
 - Diagnostic H&E whole-slide images, stored as `.svs` slide files.
-- RNA-seq gene expression files, specifically STAR-count files, used to extract `ERBB2` expression.
-
-The main query/download script is:
-
-```bash
-scripts/gdc_query_tcga_brca.py
-```
+- RNA-seq gene expression files, used to extract `ERBB2` expression.
+- Clinical supplement fields, used to assign HER2-positive, HER2-low, HER2-zero, or HER2-unknown labels.
 
 ## 6. What Has Been Done So Far
 
 ### Step 1: Query TCGA-BRCA files from GDC
 
-The workflow queried GDC for two open-access file types:
+The workflow queried GDC for:
 
 - TCGA-BRCA slide images where `data_type` is `Slide Image` and `data_format` is `SVS`.
 - TCGA-BRCA RNA-seq expression files where the workflow type is `STAR - Counts`.
+- TCGA-BRCA clinical supplement files containing HER2-related fields.
 
-The script writes metadata and manifests under:
-
-```text
-data/tcga_brca/
-```
-
-Important files include:
+Important local metadata files include:
 
 ```text
 data/tcga_brca/tcga_brca_diagnostic_slides_manifest.tsv
@@ -153,18 +138,9 @@ data/tcga_brca/file_metadata_slides.json
 data/tcga_brca/file_metadata_star_counts.json
 ```
 
-The manifests are download instructions. The CSV and JSON files are metadata tables describing which files were found.
+### Step 2: Extract ERBB2 expression
 
-### Step 2: Download RNA-seq files and extract ERBB2 expression
-
-The same GDC script can download STAR-count RNA-seq files and extract the row corresponding to `ERBB2`.
-
-The gene is identified by:
-
-```text
-Gene symbol: ERBB2
-Ensembl gene ID: ENSG00000141736
-```
+The GDC script downloaded selected STAR-count RNA-seq files and extracted the row corresponding to `ERBB2`.
 
 The extracted expression table is:
 
@@ -172,52 +148,86 @@ The extracted expression table is:
 data/tcga_brca/erbb2_expression.csv
 ```
 
-Current status:
+This was used first to make an ERBB2-high versus ERBB2-low pilot. That pilot proved the workflow could run, but it is not the main clinical HER2 comparison.
 
-- `ERBB2` expression was extracted for 80 TCGA-BRCA cases.
-- In those 80 cases, the observed `ERBB2` TPM range is approximately 6.7 to 3236.8.
+### Step 3: Build clinical HER2 labels
 
-### Step 3: Select ERBB2-high and ERBB2-low extreme cases
-
-Instead of starting with all available cases, the project selected the extremes:
-
-- The 20 cases with the highest `ERBB2` TPM values.
-- The 20 cases with the lowest `ERBB2` TPM values.
-
-This creates a clearer first comparison than using all cases immediately.
-
-The script is:
+The clinical HER2 labeling script is:
 
 ```bash
-scripts/select_her2_extremes.py
+scripts/build_tcga_brca_clinical_her2_labels.py
 ```
 
-The output is:
+It downloads the TCGA-BRCA patient-level clinical supplement and extracts HER2 IHC/ISH fields.
+
+Main outputs:
 
 ```text
-data/tcga_brca/her2_extreme_cases.csv
+data/tcga_brca/clinical_her2_labels.csv
+data/tcga_brca/clinical_her2_labels_metadata.json
+data/tcga_brca/clinical/nationwidechildrens.org_clinical_patient_brca.txt
 ```
 
-Current selected groups:
+The resulting label table found:
 
-- 20 `HER2-high` cases by `ERBB2` expression, with `ERBB2` TPM from about 219.2 to 3236.8.
-- 20 `HER2-low` cases by `ERBB2` expression, with `ERBB2` TPM from about 6.7 to 78.2.
+| Clinical HER2 group | TCGA-BRCA clinical rows |
+|---|---:|
+| HER2-positive | 174 |
+| HER2-low | 407 |
+| HER2-zero | 61 |
+| HER2-unknown | 455 |
 
-Again, these labels are expression-based research labels, not clinical HER2 labels.
+### Step 4: Select a balanced clinical HER2 pilot cohort
 
-### Step 4: Download slide images for selected cases
+The cohort selection script is:
 
-The workflow then tried to download diagnostic H&E whole-slide images for the selected cases.
+```bash
+scripts/select_clinical_her2_cohort.py
+```
 
-Slide downloads are large and can be slow or unstable. The current workspace notes that GDC slide downloads repeatedly dropped connections, so only a subset of the selected cases has been processed so far.
+It joins clinical HER2 labels, ERBB2 expression, and slide metadata, then selects a balanced pilot:
 
-Current pilot status:
+| Clinical HER2 group | Selected cases |
+|---|---:|
+| HER2-positive | 10 |
+| HER2-low | 10 |
+| HER2-zero | 10 |
 
-- Selected target cohort: 40 ERBB2-extreme cases, 20 high and 20 low.
-- Successfully processed so far: 12 slides.
-- Processed groups so far: 7 HER2-high slides and 5 HER2-low slides.
+The selection prefers direct clinical labels, local slide availability, smaller slide files, and deterministic case IDs.
 
-### Step 5: Run GigaTIME on the H&E slides
+Main outputs:
+
+```text
+data/tcga_brca/clinical_her2_cohort_cases.csv
+data/tcga_brca/clinical_her2_cohort_slides_files.csv
+data/tcga_brca/clinical_her2_cohort_slide_manifest.tsv
+data/tcga_brca/clinical_her2_cohort_summary.json
+docs/clinical_her2_cohort_selection.md
+```
+
+### Step 5: Download the selected slides
+
+The selected clinical HER2 cohort needed 30 diagnostic H&E slides. Eight were already present locally, and 22 missing slides were downloaded with:
+
+```bash
+scripts/download_clinical_her2_cohort_slides.py
+```
+
+The downloader uses GDC file IDs and writes a status file:
+
+```text
+data/tcga_brca/clinical_her2_cohort_slide_download_status.json
+```
+
+Current selected-slide status:
+
+| Clinical HER2 group | Selected slides | Downloaded slides |
+|---|---:|---:|
+| HER2-positive | 10 | 10 |
+| HER2-low | 10 | 10 |
+| HER2-zero | 10 | 10 |
+
+### Step 6: Run GigaTIME on the clinical HER2 cohort
 
 The GigaTIME inference script is:
 
@@ -232,109 +242,92 @@ For each slide, the script:
 3. Estimates whether each tile contains enough tissue.
 4. Keeps tissue-containing tiles.
 5. Randomly samples tiles when a tile limit is used.
-6. Normalizes the tile image in the same general style used for ImageNet-based models.
+6. Normalizes the tile image.
 7. Runs the tile through the GigaTIME model.
-8. Gets predicted marker maps for the 23 GigaTIME channels.
+8. Gets predicted marker maps for the GigaTIME channels.
 9. Summarizes each tile into marker scores.
 10. Aggregates tile scores into one row per slide.
 
-For the current ERBB2-extreme pilot:
+Current clinical HER2 run:
 
-- Slides processed: 12.
+- Slides processed: 30.
+- Cases processed: 30.
+- Groups processed: 10 HER2-positive, 10 HER2-low, 10 HER2-zero.
 - Tiles per slide: 64 random tissue tiles.
-- Total tile predictions: 768.
-- Device used: CPU.
+- Total tile predictions: about 1,920.
+- Device used: Apple MPS in the current local run.
 
-The main outputs are:
+Main outputs:
 
 ```text
-results/gigatime_tcga_brca_extremes/slide_scores.csv
-results/gigatime_tcga_brca_extremes/tile_scores.csv
-results/gigatime_tcga_brca_extremes/heatmaps/
+results/gigatime_tcga_brca_clinical_her2/slide_scores.csv
+results/gigatime_tcga_brca_clinical_her2/tile_scores.csv
+results/gigatime_tcga_brca_clinical_her2/heatmaps/
 ```
 
-### Step 6: Summarize the GigaTIME predictions by ERBB2 group
+### Step 7: Summarize the GigaTIME predictions by clinical HER2 group
 
-The summary script is:
+The clinical summary script is:
 
 ```bash
-scripts/summarize_her2_gigatime.py
+scripts/summarize_clinical_her2_gigatime.py
 ```
 
-This script combines:
+It combines:
 
 - The slide-level GigaTIME output.
-- The `ERBB2` RNA expression table.
-- The optional explicit HER2-high/HER2-low grouping file.
+- The selected clinical HER2 cohort table.
+- The clinical HER2 group labels.
 
-It writes a joined table:
-
-```text
-results/gigatime_tcga_brca_extremes/advisor_summary/joined_slide_her2_gigatime.csv
-```
-
-It also writes a channel comparison table:
+It writes:
 
 ```text
-results/gigatime_tcga_brca_extremes/advisor_summary/her2_group_channel_summary.csv
+results/gigatime_tcga_brca_clinical_her2/clinical_summary/joined_slide_clinical_her2_gigatime.csv
+results/gigatime_tcga_brca_clinical_her2/clinical_summary/clinical_her2_channel_summary.csv
+results/gigatime_tcga_brca_clinical_her2/clinical_summary/clinical_her2_pairwise_tests.csv
+results/gigatime_tcga_brca_clinical_her2/clinical_summary/clinical_her2_summary.md
+results/gigatime_tcga_brca_clinical_her2/clinical_summary/clinical_her2_channel_boxplots.png
+results/gigatime_tcga_brca_clinical_her2/clinical_summary/clinical_her2_group_mean_heatmap.png
+results/gigatime_tcga_brca_clinical_her2/clinical_summary/erbb2_tpm_by_clinical_her2_group.png
 ```
 
-For each marker channel, the summary compares the average virtual activation in the HER2-high group versus the HER2-low group.
+## 7. What the Current Full-Pilot Results Show
 
-The summary includes:
+The full clinical HER2 pilot includes 30 joined slides:
 
-- Mean marker activation in HER2-high slides.
-- Mean marker activation in HER2-low slides.
-- Difference between the two means.
-- Spearman correlation between `ERBB2` TPM and marker activation.
-- Exploratory statistical tests.
-- Effect-size estimates.
+- 10 HER2-positive.
+- 10 HER2-low.
+- 10 HER2-zero.
 
-The current strongest mean differences in the 12-slide pilot are small and exploratory. The largest absolute mean difference among the summarized channels is currently for `CK`, followed by `PD-1`, `CD3`, `CD4`, and `CD20`. These are not definitive findings because the current sample is small.
+The strongest three-group differences were:
 
-The generated figures include:
+| Channel | Kruskal p | Highest mean group | Lowest mean group |
+|---|---:|---|---|
+| CD68 | 0.0242 | HER2-zero | HER2-low |
+| PD-L1 | 0.0423 | HER2-zero | HER2-low |
+| CD11c | 0.0494 | HER2-zero | HER2-low |
+| CD4 | 0.0794 | HER2-zero | HER2-low |
+| Ki67 | 0.0920 | HER2-zero | HER2-low |
 
-```text
-results/gigatime_tcga_brca_extremes/advisor_summary/erbb2_tpm_distribution.png
-results/gigatime_tcga_brca_extremes/advisor_summary/her2_group_channel_deltas.png
-results/gigatime_tcga_brca_extremes/advisor_summary/her2_group_channel_boxplots.png
-results/gigatime_tcga_brca_extremes/advisor_summary/erbb2_vs_virtual_mif_scatter.png
-docs/assets/virtual_mif_channels/virtual_mif_all_channel_group_means.png
-docs/assets/virtual_mif_channels/virtual_mif_slide_channel_matrix.png
-docs/assets/virtual_mif_channels/her2_high_reference_all_virtual_mif_channels.png
-docs/assets/virtual_mif_channels/her2_low_reference_all_virtual_mif_channels.png
-docs/assets/virtual_mif_composites/her2_high_immune_checkpoint_virtual_mif_montage.png
-docs/assets/virtual_mif_composites/her2_low_immune_checkpoint_virtual_mif_montage.png
-```
+The pattern is that HER2-zero had higher predicted mean signal than HER2-low for several immune and checkpoint-related virtual channels. HER2-positive was usually between those two groups rather than clearly separated from HER2-low.
 
-The files under `docs/assets/virtual_mif_channels/` are documentation-facing images of the GigaTIME virtual mIF outputs. They show all 23 predicted channels, including representative spatial tile maps for one ERBB2-high slide and one ERBB2-low slide. See `docs/virtual_mif_channel_outputs.md` for a figure-by-figure explanation.
+The strongest pairwise comparisons were HER2-low versus HER2-zero:
 
-The files under `docs/assets/virtual_mif_composites/` look closer to real multiplex immunofluorescence images. They are made by rerunning GigaTIME on selected H&E tiles, keeping the full predicted channel maps, and compositing marker colors on a black background. They are still virtual predictions, not real mIF measurements.
+| Channel | Direction | Mann-Whitney p | BH q |
+|---|---|---:|---:|
+| CD68 | HER2-zero higher than HER2-low | 0.0091 | 0.2113 |
+| CD11c | HER2-zero higher than HER2-low | 0.0173 | 0.2113 |
+| PD-L1 | HER2-zero higher than HER2-low | 0.0211 | 0.2113 |
+| CD4 | HER2-zero higher than HER2-low | 0.0312 | 0.2258 |
+| Ki67 | HER2-zero higher than HER2-low | 0.0376 | 0.2258 |
 
-### Step 7: Render visual examples from the H&E slides
+No pairwise comparison remained statistically significant after multiple-testing correction. This means the result is a signal worth following, not proof of a biological conclusion.
 
-The image-rendering script is:
+Plain-language interpretation:
 
-```bash
-scripts/render_he_slide_images.py
-```
+> In this first 30-slide pilot, GigaTIME predicted more immune/checkpoint-like signal in HER2-zero tumors than in HER2-low tumors, especially for CD68, PD-L1, and CD11c. The sample is small, so this should be treated as a hypothesis for validation.
 
-This script makes visual material for discussion and presentation:
-
-- A low-resolution thumbnail of the whole H&E slide.
-- An overlay showing where sampled tiles came from.
-- Colored overlays showing virtual marker activation for selected markers.
-- Montages of the top-scoring H&E tiles for selected virtual markers.
-
-The current output directory is:
-
-```text
-results/gigatime_tcga_brca_extremes/he_examples/
-```
-
-These images are useful because they connect the abstract model outputs back to tissue regions that a human can inspect.
-
-## 7. What the Output Tables Mean
+## 8. What the Output Tables Mean
 
 ### `slide_scores.csv`
 
@@ -348,7 +341,7 @@ Each row contains:
 - The number of tiles analyzed.
 - The average tissue fraction.
 - For each GigaTIME channel, the average predicted activation across tiles.
-- For each GigaTIME channel, the fraction of tile area above an activation threshold.
+- For each GigaTIME channel, thresholded summaries.
 
 This is the main slide-level model output.
 
@@ -366,105 +359,137 @@ Each row contains:
 
 This table is more detailed than `slide_scores.csv` and is useful for heatmaps or spatial inspection.
 
-### `joined_slide_her2_gigatime.csv`
+### `joined_slide_clinical_her2_gigatime.csv`
 
-This table joins model output to gene expression.
+This table joins model output to clinical HER2 labels.
 
 Each row represents a processed slide with:
 
 - GigaTIME slide-level marker scores.
 - The matching TCGA case ID.
-- `ERBB2` TPM expression.
-- The HER2-high or HER2-low expression group.
+- The clinical HER2 group.
+- ER, PR, HER2 IHC/ISH, and ERBB2 expression context where available.
 
-This is the table used for the HER2/ERBB2 comparison.
+This is the table used for the clinical HER2 comparison.
 
-### `her2_group_channel_summary.csv`
+### `clinical_her2_channel_summary.csv`
 
-This table summarizes group differences by marker channel.
+This table summarizes three-group differences by marker channel.
 
 For each marker, it asks:
 
-- Is the average virtual marker activation higher in the ERBB2-high group or the ERBB2-low group?
-- How large is the difference?
-- Is there a simple monotonic relationship between ERBB2 expression and the marker score?
-- Are the exploratory statistics suggestive enough to prioritize follow-up?
+- Which HER2 group has the highest average virtual marker activation?
+- Which HER2 group has the lowest average virtual marker activation?
+- Is the three-group difference suggestive by Kruskal-Wallis testing?
+- How large is the difference between the highest and lowest group means?
 
-This table should be treated as a guide for discussion, not as final evidence.
+### `clinical_her2_pairwise_tests.csv`
 
-## 8. What This Study Has Not Done Yet
+This table compares pairs of HER2 groups:
+
+- HER2-positive versus HER2-low.
+- HER2-positive versus HER2-zero.
+- HER2-low versus HER2-zero.
+
+It includes Mann-Whitney p values and Benjamini-Hochberg corrected q values.
+
+## 9. Visual Outputs
+
+The project also generated documentation-facing virtual mIF images:
+
+```text
+docs/assets/virtual_mif_channels/
+docs/assets/virtual_mif_composites/
+```
+
+The files under `docs/assets/virtual_mif_channels/` show all 23 predicted channels, including group-level channel means and slide-by-channel matrices.
+
+The files under `docs/assets/virtual_mif_composites/` look closer to real multiplex immunofluorescence images. They are made by rerunning GigaTIME on selected H&E tiles, keeping the full predicted channel maps, and compositing marker colors on a black background.
+
+These images are still virtual predictions, not real mIF measurements.
+
+## 10. What This Study Has Not Done Yet
 
 The current pilot has not yet:
 
-- Processed all 40 selected ERBB2-extreme cases.
-- Performed full tissue quality control.
-- Confirmed clinical HER2 status using IHC or FISH annotations.
-- Compared `ERBB2` expression groups against official pathology HER2 labels.
+- Processed a large clinical HER2 cohort beyond the 30 selected cases.
+- Used more exhaustive whole-slide sampling.
+- Performed formal tissue quality control on every sampled tile.
 - Validated GigaTIME predictions against real multiplex immunofluorescence staining in these TCGA slides.
+- Compared GigaTIME immune channels with RNA-seq immune signatures.
 - Trained or fine-tuned a new model.
 - Produced a clinically deployable classifier.
 
 These limitations are important. The current goal is proof of workflow and early biological exploration, not a final scientific claim.
 
-## 9. Why This Is Still Useful
+## 11. Why This Is Still Useful
 
 This pilot is useful because it proves several practical pieces:
 
 - TCGA-BRCA H&E slides can be queried and downloaded through GDC.
-- Matching RNA-seq expression files can be queried and used to extract `ERBB2`.
-- ERBB2-high and ERBB2-low expression groups can be selected reproducibly.
+- TCGA-BRCA clinical HER2 IHC/ISH fields can be used to create HER2-positive, HER2-low, and HER2-zero groups.
+- A balanced 10/10/10 clinical HER2 pilot cohort can be selected reproducibly.
 - The released GigaTIME model can be run on TCGA-BRCA pathology tiles.
 - The GigaTIME outputs can be aggregated into slide-level marker features.
-- Those marker features can be joined back to `ERBB2` expression.
+- Those marker features can be compared across clinical HER2 groups.
 - The results can be summarized in tables, plots, and visual examples.
 
-In other words, the technical pipeline works end to end on a small pilot subset.
+In other words, the technical pipeline now works end to end for the clinically meaningful HER2 grouping.
 
-## 10. Current Scientific Interpretation
+## 12. Current Scientific Interpretation
 
 The safest interpretation is:
 
-This is an exploratory feasibility run showing that an existing H&E-to-virtual-mIF model can be applied to TCGA-BRCA breast cancer slides and connected to `ERBB2` expression data.
+This is an exploratory feasibility run showing that an existing H&E-to-virtual-mIF model can be applied to TCGA-BRCA breast cancer slides and connected to clinical HER2 labels.
 
-The current 12-slide result is too small for strong biological conclusions. It is useful for checking whether the workflow is plausible and for deciding whether to scale up to the full selected cohort.
+The current 30-slide result is too small for strong biological conclusions. It is useful because it identifies a specific hypothesis: HER2-zero tumors may show higher GigaTIME-predicted immune/checkpoint signal than HER2-low tumors in this selected TCGA-BRCA pilot.
 
-The next scientific step is to complete the 20 high / 20 low ERBB2-extreme cohort, rerun the same pipeline with the same settings, add tissue quality review, and compare the expression-based HER2 grouping with clinical HER2 annotations if available.
+The next scientific step is to test whether this pattern remains when:
 
-## 11. Reproducible Workflow Summary
+- More tiles per slide are sampled.
+- More cases are included if reliable HER2-zero cases are available.
+- The virtual immune channels are compared with RNA-seq immune marker expression or immune signatures.
+- A human reviews representative H&E tiles and virtual mIF composites for plausibility.
+
+## 13. Reproducible Workflow Summary
 
 The workflow is organized around these scripts:
 
 ```text
 scripts/gdc_query_tcga_brca.py
-scripts/select_her2_extremes.py
+scripts/build_tcga_brca_clinical_her2_labels.py
+scripts/select_clinical_her2_cohort.py
+scripts/download_clinical_her2_cohort_slides.py
 scripts/run_gigatime_tcga_brca.py
-scripts/summarize_her2_gigatime.py
+scripts/summarize_clinical_her2_gigatime.py
 scripts/render_he_slide_images.py
+scripts/render_virtual_mif_channel_images.py
+scripts/render_virtual_mif_composites.py
 ```
 
-The typical flow is:
+The current clinical HER2 flow is:
 
 ```text
 Query GDC files
-  -> download RNA-seq files
   -> extract ERBB2 expression
-  -> select ERBB2-high and ERBB2-low cases
-  -> download H&E slides
+  -> build clinical HER2 labels from IHC/ISH fields
+  -> select balanced HER2-positive / HER2-low / HER2-zero cases
+  -> download selected H&E slides
   -> run GigaTIME on slide tiles
   -> aggregate tile predictions to slide scores
-  -> join slide scores to ERBB2 expression
+  -> join slide scores to clinical HER2 groups
   -> summarize and visualize group differences
-  -> render H&E examples for human inspection
+  -> use visual QC and RNA validation as next checks
 ```
 
-## 12. Practical Notes for a New Reader
+## 14. Practical Notes for a New Reader
 
 If you are reading the project for the first time, start with:
 
 1. `README.md` for commands and file locations.
-2. `docs/current_pilot_run.md` for the current run status.
-3. This document for the conceptual explanation.
-4. `docs/advisor_brief.md` for the short advisor-facing summary.
-5. The executed notebook in `notebooks/` for a presentation-style view of the current pilot.
+2. `docs/clinical_her2_cohort_selection.md` for the selected 30-case cohort.
+3. `docs/clinical_her2_gigatime_run.md` for the current full clinical HER2 result.
+4. This document for the conceptual explanation.
+5. `docs/advisor_brief.md` for the short advisor-facing summary.
 
-The most important caution is that "HER2-high" and "HER2-low" currently mean high and low `ERBB2` RNA expression in this pilot dataset. They do not yet mean clinically validated HER2 status.
+The most important caution is that GigaTIME outputs are predicted virtual mIF research features. They are not real multiplex immunofluorescence measurements and should be validated before making biological or clinical claims.

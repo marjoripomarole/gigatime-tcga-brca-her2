@@ -2,7 +2,7 @@
 
 This project wraps the official GigaTIME implementation for a TCGA-BRCA pilot focused on HER2/ERBB2 expression.
 
-The goal is to generate virtual multiplex immunofluorescence (mIF) features from TCGA-BRCA diagnostic H&E whole-slide images, join those features to ERBB2 RNA expression, and produce advisor-ready summary tables and figures.
+The goal is to generate virtual multiplex immunofluorescence (mIF) features from TCGA-BRCA diagnostic H&E whole-slide images, join those features to clinical HER2 labels and ERBB2 RNA expression, and produce advisor-ready summary tables and figures.
 
 ## What This Contains
 
@@ -10,6 +10,7 @@ The goal is to generate virtual multiplex immunofluorescence (mIF) features from
 - `scripts/gdc_query_tcga_brca.py`: queries GDC for TCGA-BRCA diagnostic slides and STAR-count RNA-seq files, writes GDC manifests, and can extract ERBB2 expression.
 - `scripts/build_tcga_brca_clinical_her2_labels.py`: queries the GDC TCGA-BRCA clinical supplement and builds reproducible clinical HER2-positive/HER2-low/HER2-zero labels.
 - `scripts/select_clinical_her2_cohort.py`: selects a balanced clinical HER2-positive/HER2-low/HER2-zero cohort and writes a slide manifest for the next GigaTIME run.
+- `scripts/download_clinical_her2_cohort_slides.py`: downloads the selected clinical HER2 cohort slide files from GDC by file ID and writes a resumable status JSON.
 - `scripts/run_gigatime_tcga_brca.py`: tiles TCGA-BRCA `.svs` slides, runs the official GigaTIME model, and aggregates virtual mIF channels per slide.
 - `scripts/summarize_her2_gigatime.py`: joins GigaTIME slide scores with ERBB2 expression and makes HER2-high/HER2-low summary figures.
 - `scripts/summarize_clinical_her2_gigatime.py`: compares GigaTIME virtual mIF outputs across clinical HER2-positive/HER2-low/HER2-zero groups.
@@ -19,7 +20,7 @@ The goal is to generate virtual multiplex immunofluorescence (mIF) features from
 - `docs/plain_language_methodology.md`: detailed non-specialist explanation of the study background, methodology, outputs, and current limitations.
 - `docs/paper_proposal_process_log.md`: living process log for turning the pilot into a paper or grant proposal.
 - `docs/clinical_her2_cohort_selection.md`: selected 30-case clinical HER2 pilot cohort and selection counts.
-- `docs/clinical_her2_gigatime_run.md`: selected-cohort GigaTIME run status and preliminary clinical HER2 summary.
+- `docs/clinical_her2_gigatime_run.md`: selected-cohort GigaTIME run status and full 30-slide clinical HER2 summary.
 - `docs/advisor_brief.md`: concise project framing and discussion points.
 - `docs/current_pilot_run.md`: current two-case run status and advisor-facing caveats.
 - `configs/tcga_brca_her2.yaml`: default paths and pilot settings.
@@ -126,6 +127,17 @@ gdc-client download \
   -d data/tcga_brca/slides
 ```
 
+If `gdc-client` is not installed, use the project downloader:
+
+```bash
+conda run -n gigatime-tcga python scripts/download_clinical_her2_cohort_slides.py \
+  --only-missing
+```
+
+This downloads each selected slide by GDC file ID into `data/tcga_brca/slides/<case>/` and writes:
+
+- `data/tcga_brca/clinical_her2_cohort_slide_download_status.json`
+
 ## 4. Run GigaTIME on TCGA-BRCA Slides
 
 ```bash
@@ -203,3 +215,4 @@ This writes H&E-versus-virtual-mIF panels and marker-composite montages to `docs
 - GigaTIME outputs virtual mIF maps for 23 channels, including immune markers such as `CD3`, `CD8`, `CD4`, `CD20`, `CD68`, `PD-1`, and `PD-L1`.
 - The first deliverable is a replication/adaptation pilot, not a new model: run the released model on TCGA-BRCA H&E slides and ask whether virtual TIME signatures differ across ERBB2 expression strata.
 - The initial run should be treated as exploratory until tissue QC, slide-level aggregation, and HER2 clinical annotations are reviewed.
+- The current clinical HER2 pilot has processed 30 selected slides: 10 HER2-positive, 10 HER2-low, and 10 HER2-zero. The strongest pilot signal is higher GigaTIME-predicted CD68, PD-L1, and CD11c in HER2-zero versus HER2-low, but these are hypothesis-generating and not FDR-significant after pairwise correction.
