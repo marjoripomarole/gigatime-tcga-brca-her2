@@ -8,12 +8,14 @@ The goal is to generate virtual multiplex immunofluorescence (mIF) features from
 
 - `external/GigaTIME/`: cloned official GigaTIME code from `prov-gigatime/GigaTIME`.
 - `scripts/gdc_query_tcga_brca.py`: queries GDC for TCGA-BRCA diagnostic slides and STAR-count RNA-seq files, writes GDC manifests, and can extract ERBB2 expression.
+- `scripts/build_tcga_brca_clinical_her2_labels.py`: queries the GDC TCGA-BRCA clinical supplement and builds reproducible clinical HER2-positive/HER2-low/HER2-zero labels.
 - `scripts/run_gigatime_tcga_brca.py`: tiles TCGA-BRCA `.svs` slides, runs the official GigaTIME model, and aggregates virtual mIF channels per slide.
 - `scripts/summarize_her2_gigatime.py`: joins GigaTIME slide scores with ERBB2 expression and makes HER2-high/HER2-low summary figures.
 - `scripts/render_virtual_mif_channel_images.py`: renders all-channel virtual mIF figures from GigaTIME tile and slide predictions.
 - `scripts/render_virtual_mif_composites.py`: reruns GigaTIME on selected tiles and renders fluorescence-style virtual mIF composites from the full predicted channel maps.
 - `docs/virtual_mif_channel_outputs.md`: explains the generated virtual mIF channel images and how to interpret them.
 - `docs/plain_language_methodology.md`: detailed non-specialist explanation of the study background, methodology, outputs, and current limitations.
+- `docs/paper_proposal_process_log.md`: living process log for turning the pilot into a paper or grant proposal.
 - `docs/advisor_brief.md`: concise project framing and discussion points.
 - `docs/current_pilot_run.md`: current two-case run status and advisor-facing caveats.
 - `configs/tcga_brca_her2.yaml`: default paths and pilot settings.
@@ -74,7 +76,28 @@ python scripts/gdc_query_tcga_brca.py \
 
 To pull one specific case, add `--slide-case-id TCGA-3C-AALI`.
 
-## 2. Run GigaTIME on TCGA-BRCA Slides
+## 2. Build Clinical HER2 Labels
+
+For analyses that compare HER2-positive, HER2-low, and HER2-zero disease, build labels from the TCGA-BRCA clinical supplement:
+
+```bash
+conda run -n gigatime-tcga python scripts/build_tcga_brca_clinical_her2_labels.py
+```
+
+This writes:
+
+- `data/tcga_brca/clinical_her2_labels.csv`
+- `data/tcga_brca/clinical_her2_labels_metadata.json`
+- `data/tcga_brca/clinical/nationwidechildrens.org_clinical_patient_brca.txt`
+
+The label rules are:
+
+- `HER2-positive`: IHC `3+`, ISH positive, or positive IHC receptor status when detailed score/ISH are missing.
+- `HER2-low`: IHC `1+` with no positive ISH, or IHC `2+` with ISH negative.
+- `HER2-zero`: IHC `0` with no positive ISH.
+- `HER2-unknown`: missing, not evaluated, equivocal without definitive ISH, or otherwise incomplete HER2 fields.
+
+## 3. Run GigaTIME on TCGA-BRCA Slides
 
 ```bash
 python scripts/run_gigatime_tcga_brca.py \
@@ -95,7 +118,7 @@ Key output:
 
 For the first advisor meeting, `--tile-limit 512` is enough to demonstrate the pipeline. Increase or remove it for the full run.
 
-## 3. Summarize by HER2/ERBB2 Expression
+## 4. Summarize by HER2/ERBB2 Expression
 
 ```bash
 python scripts/summarize_her2_gigatime.py \
@@ -106,7 +129,7 @@ python scripts/summarize_her2_gigatime.py \
 
 This writes joined data, channel-level HER2-high versus HER2-low summaries, figures, and `advisor_summary.md`.
 
-## 4. Render All Virtual mIF Channel Images
+## 5. Render All Virtual mIF Channel Images
 
 ```bash
 conda run -n gigatime-tcga python scripts/render_virtual_mif_channel_images.py
