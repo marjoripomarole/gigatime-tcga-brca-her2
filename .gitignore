@@ -9,6 +9,7 @@ envs/*/
 
 # Local upstream dependency clone
 external/GigaTIME/
+external/HistoPrism/
 
 # Python caches
 __pycache__/
