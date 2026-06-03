@@ -1,6 +1,6 @@
 # Expanded 20/20/20 Clinical HER2 Results
 
-Status: Current best presentation summary. New researchers should read this first, then `docs/README.md` for the full document map.
+Status: Historical expanded 60-slide presentation summary. For the current primary result, use `docs/clinical_her2_high_trust_tile128_results.md`; use this report as a 256-tile comparator/provenance record.
 
 ## What Was Run
 
