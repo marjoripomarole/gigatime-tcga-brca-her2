@@ -32,6 +32,7 @@ This folder contains standalone workflow scripts. Most scripts are intentionally
 - `analyze_within_source_site_low_zero.py`
 - `analyze_local_erbb2_expression_validation.py`
 - `audit_her2_isoform_validation_feasibility.py`
+- `analyze_hoptimus_embedding_control.py`
 
 ## Historical Analysis
 
