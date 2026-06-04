@@ -23,6 +23,23 @@ Valieris et al., "Weakly-supervised deep learning models enable HER2-low predict
 
 Takeaway: this project's confound analysis is more rigorous than the published state of the art on this exact task. Valieris et al. is the key citation for a cautionary-methods paper, and the ACCCC group is a natural collaborator (their cohort is the cleanest fit for the primary question).
 
+## Literature Context: Grade And Immune Differences Are Real (And Why Grade Matters)
+
+An internal literature scan (`docs/literature_her2_microenvironment.md`, AI-generated and citation-verified 2026-06-04) found that HER2-low and HER2-zero differ biologically in ways that are independent of TCGA and visible on H&E, in the same direction as this project's image finding. This refines the confound interpretation rather than overturning it: the low-versus-zero image signal is most plausibly real morphology (tumor grade and immune/TIL context) entangled with TCGA acquisition batch, but neither is tumor-cell HER2 protein status. "Image AI predicts HER2-low versus zero" is better read as "it predicts grade and immune context, partly confounded by site and scanner." This also explains why two generic foundation-model embeddings reproduce the signal: grade and immune infiltrate are generic visual properties.
+
+Verified supporting literature:
+
+- Tumor grade differs: HER2-low cases have significantly less frequent Nottingham grade 3 morphology than HER2-zero (HER2-low is the less aggressive group), among ER-positive cases. Mod Pathol 2023, PMID 36967073. (Confirmed against PubMed.)
+- Immune/TIL density differs: HER2-null (zero) tumors were reported to have higher tumor-infiltrating lymphocyte (TIL) density than HER2-low. BMC Cancer 2025, PMID 41316049. (Real paper on this exact topic; the specific HER2-null > HER2-low TIL direction should be confirmed in the full text before citing, because it is the result that directionally matches the GigaTIME finding.)
+
+Discarded citation: the source file also cited PMID 42074514 ("Integrated Multi-Omics and Machine Learning ... Breast Cancer," Genes 2026) to support the need for TCGA batch-effect correction. That paper is real but is a generic multi-omics ML / CHEK1 paper, not about histology batch effects, so it is not used here. A genuine WSI batch-effects reference should be substituted if this point is cited.
+
+### Grade Is The Key Confounder That TCGA Cannot Give You
+
+Tumor grade is the most biologically relevant confounder this literature surfaces: it differs between HER2-low and HER2-zero, it is visible on H&E, and it is a plausible thing an image model reads instead of HER2. The natural next analysis would be to add grade as a covariate (exactly as was done for ER/PR and slide size) and test whether the low-versus-zero signal survives grade adjustment, and whether grade alone classifies low-versus-zero the way slide-size did.
+
+However, TCGA-BRCA does not provide histologic grade: there is no grade field in `high_trust_slides.csv` or the GDC clinical biotab (verified 2026-06-04; a known TCGA-BRCA limitation). The signal therefore cannot be adjusted for grade inside TCGA. This is an additional reason to move to external cohorts, and it raises the priority of cohorts that report grade. BCNB, ACROBAT, and ACCCC all include histologic grade.
+
 ## Candidate Shortlist
 
 | Cohort | What it is | Single-source? | HER2 granularity | Access |
@@ -46,6 +63,8 @@ Takeaway: this project's confound analysis is more rigorous than the published s
 - BCNB: confirm exact HER2 value categories (is IHC score 0 separable from 1+, so HER2-zero is recoverable?).
 - ACROBAT: confirm whether per-case HER2 IHC scores are tabulated in metadata, or only the stained IHC slides are provided (requiring score derivation).
 - ACCCC: confirm data-sharing terms / whether the Valieris group will collaborate or release.
+- Confirm the HER2-null > HER2-low TIL-density direction in the full text of PMID 41316049 before citing it as biological corroboration.
+- Confirm histologic grade availability and encoding in each external cohort (BCNB, ACROBAT, ACCCC report grade; TCGA-BRCA does not), so grade can be used as a covariate the way slide-size and ER/PR were used internally.
 
 ## Sources
 
@@ -56,3 +75,5 @@ Takeaway: this project's confound analysis is more rigorous than the published s
 - Yale HER2-TUMOR-ROIS (TCIA): https://www.cancerimagingarchive.net/collection/her2-tumor-rois/
 - IMPRESS (npj Precision Oncology 2023): https://www.nature.com/articles/s41698-023-00352-5
 - Breast H&E WSI dataset scoping review: https://arxiv.org/html/2306.01546v2
+- HER2-low grade / morphology (Mod Pathol 2023): https://pubmed.ncbi.nlm.nih.gov/36967073/
+- HER2 subgroups and TILs (BMC Cancer 2025): https://pubmed.ncbi.nlm.nih.gov/41316049/
