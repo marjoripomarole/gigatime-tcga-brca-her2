@@ -149,14 +149,13 @@ The project is broader than one model:
 
 `data/` and `results/` are ignored because they contain large local artifacts.
 
-One known cleanup candidate is the unrelated-looking genomics scaffold:
+An unrelated GATK germline variant-calling scaffold (hg38 reference, BQSR known-sites VCFs, and an `NA12878` test BAM) was left over from the repo's initial template and removed on 2026-06-04, reclaiming ~19 GB locally. These were never git-tracked and not referenced by the pathology workflow:
 
-- `data/known_sites/`
-- `data/reference/`
-- `data/raw/NA12878.bam`
-- empty `results/aligned`, `results/annotated`, `results/figures`, `results/qc`, and `results/variants`
+- `data/reference/` (hg38 FASTA + BWA/GATK index) — removed
+- `data/known_sites/` (dbSNP138, Mills, known-indels VCFs) — removed
+- `data/raw/NA12878.bam` (Genome-in-a-Bottle germline sample) — removed
 
-Those paths are not referenced by the current pathology workflow. They should be removed or archived only after explicit confirmation.
+If germline variant calling is ever needed again, re-download the reference FASTA and known-sites from the GATK resource bundle.
 
 ## Guardrails
 
