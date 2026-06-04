@@ -98,6 +98,9 @@ Audit BCNB image inputs before any model run:
 
 ```bash
 conda run -n gigatime-tcga python scripts/audit_bcnb_image_inputs.py
+conda run -n gigatime-tcga python scripts/build_bcnb_patch_manifest.py \
+  --max-patches-per-patient 10 \
+  --output data/bcnb/bcnb_patch_manifest_capped10.csv
 ```
 
 Select/download a clinical HER2 cohort:

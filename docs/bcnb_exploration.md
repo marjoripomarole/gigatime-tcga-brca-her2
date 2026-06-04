@@ -58,7 +58,7 @@ This is a single-scanner external HER2-low-versus-zero cohort of 654 vs 127. The
 
 Grade is present and shows the literature-expected pattern: among graded low/zero cases, HER2-zero is proportionally more often grade 3 (42/90 = 47%) than HER2-low (181/577 = 31%), consistent with HER2-zero being more aggressive (see `external_validation_candidates.md` literature context). Because grade is available, the grade confounder that TCGA could not provide can now be tested and adjusted, exactly as slide-size/ER/PR were handled internally. ER also differs between groups (HER2-low 86% ER+, HER2-zero 65% ER+), and is likewise available as a covariate.
 
-Remaining piece: the WSIs. The Drive folder contains `WSIs/` (the slides), `paper_patches.zip` (1.85 GB precomputed patches), `dataset-splitting/`, `README.txt`, and `patient-clinical-data.xlsx`. The slides (or the precomputed patches) are the large download needed before running the embedding-control pipeline.
+Image-input update: `paper_patches.zip` has now been downloaded and audited locally (see `bcnb_paper_patches_audit.md`). It maps cleanly to all 1,058 patients and can support a fast patch-based smoke/pilot. Full WSIs are still the stronger paper-grade input if a patch pilot finds a signal worth testing with slide-level controls.
 
 ## Why BCNB Is Now The Priority External Cohort
 
@@ -71,11 +71,11 @@ Remaining piece: the WSIs. The Drive folder contains `WSIs/` (the slides), `pape
 ## Recommended Next Steps
 
 1. Decide the image input path:
+   - Patch pilot: ready for the next smoke; use `paper_patches.zip` with capped patches per patient and patient-level aggregation.
    - Full WSIs: strongest and cleanest for a paper-grade analysis, because the same tile-sampling, tissue-fraction, and slide-size controls can be reused.
-   - `paper_patches.zip`: faster first triage, but only acceptable if patch filenames/metadata map cleanly to patient IDs and patch sampling is documented enough to avoid hidden selection bias.
-2. Run `scripts/audit_bcnb_image_inputs.py` after any WSI or patch download to confirm which files are present and whether patient IDs map cleanly to `data/bcnb/bcnb_her2_labels.csv`.
-3. Build a BCNB slide/patch manifest joined to `data/bcnb/bcnb_her2_labels.csv`, keeping restricted data under ignored `data/bcnb/`.
-4. Run a one-slide or one-patient smoke first, then a small balanced low/zero pilot, before launching a full 781-patient embedding run.
+2. Build or refresh the BCNB patch manifest with `scripts/build_bcnb_patch_manifest.py`, keeping restricted data under ignored `data/bcnb/`.
+3. Run a one-patient patch smoke first, then a small balanced low/zero pilot, before launching a full 781-patient embedding run.
+4. Run `scripts/audit_bcnb_image_inputs.py` again after any WSI download to confirm which files are present and whether patient IDs map cleanly.
 5. Reuse the existing confound discipline: compare image embeddings against grade, ER/PR, Ki67, molecular subtype, nodal status, and tissue/slide-size features. In BCNB, slide-size/source-site should not classify low-vs-zero well; if it does, that is itself a warning sign.
 6. Treat H-Optimus-0/Virchow2 as primary foundation-model controls; keep GigaTIME/DeepSpot/HistoPrism as interpretive follow-ups unless the BCNB signal survives clinical and acquisition controls.
 
@@ -84,6 +84,8 @@ Remaining piece: the WSIs. The Drive folder contains `WSIs/` (the slides), `pape
 - Public clinical files: `data/bcnb/clinical_public/preprocessed-type-{0..4}.xlsx` (gitignored under `data/`).
 - Full clinical file: `data/bcnb/patient-clinical-data.xlsx` (gitignored; non-commercial dataset file, not redistributed).
 - Derived label table: `data/bcnb/bcnb_her2_labels.csv` (gitignored; local derivative used for analysis), reproducibly built by `scripts/build_bcnb_her2_labels.py`.
+- Paper patch archive: `data/bcnb/paper_patches.zip` (gitignored; 76,578 256x256 RGB `.jpg` patches; clean patient-ID mapping; see `bcnb_paper_patches_audit.md`).
+- Patch manifests: `data/bcnb/bcnb_patch_manifest.csv` and `data/bcnb/bcnb_patch_manifest_capped10.csv` (gitignored; built by `scripts/build_bcnb_patch_manifest.py`).
 - Image-input audit: `scripts/audit_bcnb_image_inputs.py` checks for `data/bcnb/WSIs/`, `data/bcnb/paper_patches.zip`, and `data/bcnb/paper_patches/` without extracting or running models.
 - `openpyxl` was installed into the `gigatime-tcga` conda env on 2026-06-04 to read `.xlsx` (the full BCNB clinical file is also `.xlsx`).
 

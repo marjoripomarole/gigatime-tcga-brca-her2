@@ -8,7 +8,7 @@ The HER2-low versus HER2-zero signal in this project has been shown, repeatedly 
 
 TCGA-internal evidence is therefore exhausted. Pulling more TCGA-BRCA slides does not help: HER2-zero is capped at 61 cases in all of TCGA-BRCA (already fully used), and more data along a confounded axis tightens confidence intervals around a biased estimate. The only data that can change the conclusion is variation independent of HER2 status, i.e. an external cohort, ideally single-scanner / single-institution so the slide-size/source-site confound is removed by construction.
 
-BCNB now satisfies the first external-cohort gate: full clinical data are local, HER2 IHC 0/1+/2+/3+ is recoverable, histological grade is available, and the cohort is single-scanner. The remaining BCNB gate is practical rather than clinical: obtaining the WSIs or validating whether the provided precomputed patches can support the same embedding-control analysis without unacceptable sampling bias.
+BCNB now satisfies the first external-cohort gate: full clinical data are local, HER2 IHC 0/1+/2+/3+ is recoverable, histological grade is available, and the cohort is single-scanner. The patch-input gate is also partly solved: `paper_patches.zip` is local, valid, and maps cleanly to all 1,058 patients (see `bcnb_paper_patches_audit.md`). The remaining caveat is methodological rather than logistical: precomputed tumor-region patches do not preserve whole-slide acquisition and tissue-area controls, so full WSIs remain preferable for the strongest paper-grade analysis.
 
 ## The Hard Constraint: HER2-Low-vs-Zero Granularity
 
@@ -55,15 +55,15 @@ However, TCGA-BRCA does not provide histologic grade: there is no grade field in
 
 ## Recommended Path
 
-1. Make BCNB the immediate external validation path. The clinical gate is now solved: BCNB gives a single-scanner low-versus-zero cohort of 654 vs 127 with grade, ER, PR, Ki67, molecular subtype, and nodal status. Next, obtain either the WSIs or a documented patch set, build a patient/slide manifest, and rerun the same generic-embedding control with grade/ER/PR covariate baselines.
+1. Make BCNB the immediate external validation path. The clinical gate is solved, and the precomputed patch archive is usable for a fast smoke/pilot: BCNB gives a single-scanner low-versus-zero cohort of 654 vs 127 with grade, ER, PR, Ki67, molecular subtype, and nodal status. Next, build a patient-level patch manifest and rerun the generic-embedding control with capped patches per patient and grade/ER/PR covariate baselines.
 2. Contact the Valieris / ACCCC group in parallel. Their cohort remains the cleanest published analogue (single-institution, single-scanner, with neg/low/high labels) and they have hit the same wall. A collaboration or data request is still valuable, especially if BCNB's core-biopsy design introduces tissue-sampling concerns.
 3. Use ACROBAT as the strongest independent stress test if BCNB succeeds or is limited by WSI logistics: 4,000+ WSIs from one source, with paired HER2-IHC slides to derive status.
 4. Use IMPRESS multiplex IHC (real PD-L1/CD8/CD163) to validate GigaTIME's virtual immune channels against measured immune markers, closing the RNA-validation gap that never closed.
 
 ## Open Items To Verify Before Running
 
-- BCNB: obtain the WSIs or inspect `paper_patches.zip` metadata, then run `scripts/audit_bcnb_image_inputs.py` to confirm patient/slide/patch IDs map cleanly to `Patient ID` and do not encode a train/test split or patch-selection process that would bias a foundation-model embedding analysis.
-- BCNB: decide whether to use full WSIs (strongest, more storage/time) or precomputed patches (faster, but only acceptable if patch sampling is documented and patient-linked).
+- BCNB: build a patch manifest from `paper_patches.zip` and run a one-patient smoke; use capped patches per patient and patient-level aggregation to avoid patch-count imbalance.
+- BCNB: decide whether to download full WSIs after the patch pilot; full WSIs remain strongest for slide-size/tissue-area controls.
 - ACROBAT: confirm whether per-case HER2 IHC scores are tabulated in metadata, or only the stained IHC slides are provided (requiring score derivation).
 - ACCCC: confirm data-sharing terms / whether the Valieris group will collaborate or release.
 - Confirm the HER2-null > HER2-low TIL-density direction in the full text of PMID 41316049 before citing it as biological corroboration.
