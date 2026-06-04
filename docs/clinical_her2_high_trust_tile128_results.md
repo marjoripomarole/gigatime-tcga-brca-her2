@@ -511,7 +511,7 @@ See:
 
 ## Generic H&E Embedding Control
 
-This control asks whether the GigaTIME virtual-immune framing is required to reproduce the HER2-low versus HER2-zero separation, or whether a generic H&E foundation-model embedding does the same thing. We extracted `bioptimus/H-optimus-0` embeddings (1536-d, mean-pooled over 128 random tissue tiles per slide) for the same 171 high-trust slides, then classified HER2-low versus HER2-zero on identical cross-validation folds, with PCA fit inside each training fold to avoid leakage.
+This control asks whether the GigaTIME virtual-immune framing is required to reproduce the HER2-low versus HER2-zero separation, or whether generic H&E foundation-model embeddings do the same thing. We ran the control with two independent foundation models, `bioptimus/H-optimus-0` (1536-d) and `paige-ai/Virchow2` (2560-d), each mean-pooled over 128 random tissue tiles per slide across the same 171 high-trust slides, then classified HER2-low versus HER2-zero on identical cross-validation folds with PCA fit inside each training fold to avoid leakage.
 
 | Feature set | Repeated-CV balanced accuracy | Leave-source-site-out balanced accuracy |
 |---|---:|---:|
@@ -519,18 +519,22 @@ This control asks whether the GigaTIME virtual-immune framing is required to rep
 | Source-site covariates | 0.873 | 0.500 |
 | GigaTIME mean channels | 0.710 | 0.617 |
 | H-Optimus-0 embedding | 0.726 | 0.586 |
-| H-Optimus-0 + slide-size | 0.738 | 0.560 |
+| Virchow2 embedding | 0.693 | 0.551 |
 
-The generic embedding separates HER2-low from HER2-zero about as well as GigaTIME (balanced accuracy 0.726 versus 0.710) and beats its own shuffled-label null (null mean 0.488, empirical p 0.005), stable across 10/20/30 PCA components (0.705-0.726). It then collapses under leave-source-site-out validation the same way GigaTIME does, from 0.726 to 0.586, while slide-size covariates remain portable at 0.882. The source-site covariate's 0.500 under holdout is the expected degenerate case, because one-hot site identity cannot predict an unseen held-out site; slide size is the portable confound.
+Both generic embeddings separate HER2-low from HER2-zero about as well as GigaTIME (H-Optimus-0 0.726, Virchow2 0.693, GigaTIME 0.710), and both beat their own shuffled-label nulls (empirical p 0.005), stable across 10/20/30 PCA components. Both then collapse under leave-source-site-out validation the same way GigaTIME does (H-Optimus-0 0.726 to 0.586, Virchow2 0.693 to 0.551), while slide-size covariates remain portable at 0.882. The source-site covariate's 0.500 under holdout is the expected degenerate case, because one-hot site identity cannot predict an unseen held-out site; slide size is the portable confound.
 
-Interpretation: a generic morphology embedding with no immune-channel meaning reproduces both the low-versus-zero signal and the same source-site collapse. The GigaTIME-specific virtual immune/myeloid/checkpoint framing is therefore not required to explain the separation. The most parsimonious reading is generic tissue/morphology that tracks TCGA acquisition structure. This is an internal TCGA control rather than external validation, but it removes the need to invoke virtual-immune biology and reinforces the confounded tissue-context interpretation.
+Interpretation: two independent generic morphology embeddings, with no immune-channel meaning, each reproduce both the low-versus-zero signal and the same source-site collapse. The GigaTIME-specific virtual immune/myeloid/checkpoint framing is therefore not required to explain the separation. The most parsimonious reading is generic tissue/morphology that tracks TCGA acquisition structure. This is an internal TCGA control rather than external validation, but the replication across two foundation models removes the need to invoke virtual-immune biology and reinforces the confounded tissue-context interpretation.
 
-![Embedding control balanced accuracy](assets/clinical_her2_high_trust_tile128_hoptimus_embedding_control/embedding_control_balanced_accuracy.png)
+![H-Optimus-0 embedding control balanced accuracy](assets/clinical_her2_high_trust_tile128_hoptimus_embedding_control/embedding_control_balanced_accuracy.png)
+
+![Virchow2 embedding control balanced accuracy](assets/clinical_her2_high_trust_tile128_virchow2_embedding_control/embedding_control_balanced_accuracy.png)
 
 See:
 
 - `docs/clinical_her2_high_trust_tile128_hoptimus_embedding_control.md`
+- `docs/clinical_her2_high_trust_tile128_virchow2_embedding_control.md`
 - `docs/assets/clinical_her2_high_trust_tile128_hoptimus_embedding_control/`
+- `docs/assets/clinical_her2_high_trust_tile128_virchow2_embedding_control/`
 
 ## What We Can Present
 

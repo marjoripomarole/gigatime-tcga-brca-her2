@@ -15,6 +15,7 @@ This folder contains standalone workflow scripts. Most scripts are intentionally
 
 - `run_gigatime_tcga_brca.py` - primary GigaTIME virtual mIF feature extraction.
 - `run_hoptimus_tcga_brca.py` - H0-mini/H-Optimus H&E embedding extraction.
+- `run_virchow2_tcga_brca.py` - Virchow2 H&E embedding extraction (second embedding control).
 
 ## Current Analysis And Sensitivity Checks
 
@@ -57,6 +58,7 @@ This folder contains standalone workflow scripts. Most scripts are intentionally
 
 - `run_histoprism_one_vector_smoke.py`
 - `run_deepspot_one_vector_smoke.py`
+- `run_virchow2_one_slide_smoke.py`
 
 ## Cleanup Note
 

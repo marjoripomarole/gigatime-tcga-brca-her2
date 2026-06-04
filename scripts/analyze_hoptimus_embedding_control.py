@@ -2,9 +2,10 @@
 """Generic H&E embedding control for HER2-low versus HER2-zero.
 
 This asks a single disciplined question: does a generic pathology foundation-model
-embedding (H-Optimus-0), which has no virtual-immune interpretation, separate
-HER2-low from HER2-zero as well as the GigaTIME virtual-mIF channels do, and does
-it collapse under leave-source-site-out validation the same way?
+embedding (e.g. H-Optimus-0 or Virchow2), which has no virtual-immune
+interpretation, separate HER2-low from HER2-zero as well as the GigaTIME
+virtual-mIF channels do, and does it collapse under leave-source-site-out
+validation the same way?
 
 If a generic embedding also separates the groups and also collapses under
 source-site holdout while slide-size covariates stay strong, then the GigaTIME
@@ -14,7 +15,9 @@ that tracks TCGA acquisition structure.
 
 The embedding is one mean-pooled vector per slide. It is compared on identical
 cross-validation folds against slide-size, source-site, and GigaTIME baselines,
-with PCA fit inside each training fold to avoid leakage.
+with PCA fit inside each training fold to avoid leakage. The model is selected by
+``--embeddings`` plus ``--model-label``/``--model-id``; defaults reproduce the
+H-Optimus-0 run.
 """
 
 from __future__ import annotations
@@ -47,15 +50,20 @@ from train_her2_classifier_baseline import fit_predict_logistic, standardize_tra
 BASE_RESULT_DIR = Path("results/gigatime_tcga_brca_clinical_her2_high_trust_tile128")
 HOPTIMUS_DIR = Path("results/hoptimus_tcga_brca_high_trust_tile128")
 
-# Feature sets compared on identical folds. Order controls table/plot order.
+# Feature sets compared on identical folds. Labels containing "{model}" are
+# filled from --model-label at runtime. Order controls table/plot order.
 FEATURE_SETS = [
     ("slide_size_only", "Slide-size covariates"),
     ("source_site_only", "Source-site covariates"),
     ("gigatime_mean_channels", "GigaTIME mean channels"),
-    ("hoptimus_embedding", "H-Optimus-0 embedding (PCA)"),
-    ("hoptimus_plus_slide_size", "H-Optimus-0 + slide-size"),
+    ("embedding", "{model} embedding (PCA)"),
+    ("embedding_plus_slide_size", "{model} + slide-size"),
 ]
-EMBEDDING_SETS = {"hoptimus_embedding", "hoptimus_plus_slide_size"}
+EMBEDDING_SETS = {"embedding", "embedding_plus_slide_size"}
+
+
+def labeled(template: str, model_label: str) -> str:
+    return template.format(model=model_label) if "{model}" in template else template
 
 
 def parse_args() -> argparse.Namespace:
@@ -72,7 +80,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--embeddings",
         default=str(HOPTIMUS_DIR / "slide_embeddings.csv"),
-        help="H-Optimus-0 mean-pooled slide embeddings.",
+        help="Mean-pooled slide embeddings, one row per slide (embedding_* columns).",
+    )
+    parser.add_argument(
+        "--model-label",
+        default="H-Optimus-0",
+        help="Display name for the embedding model in tables, figure, and report.",
+    )
+    parser.add_argument(
+        "--model-id",
+        default="bioptimus/H-optimus-0",
+        help="Embedding model id recorded in metadata and the report method section.",
     )
     parser.add_argument(
         "--reference-view",
@@ -119,9 +137,9 @@ def pca_fit_transform(x_train: np.ndarray, x_test: np.ndarray, k: int) -> tuple[
 
 
 def design_for_feature_set(pd, rows, feature_set: str, embed_cols: list[str]):
-    if feature_set == "hoptimus_embedding":
+    if feature_set == "embedding":
         return rows[embed_cols].astype(float)
-    if feature_set == "hoptimus_plus_slide_size":
+    if feature_set == "embedding_plus_slide_size":
         size = design_matrix_for_set(pd, rows, "slide_size_only")
         return pd.concat([rows[embed_cols].astype(float).reset_index(drop=True), size.reset_index(drop=True)], axis=1)
     return design_matrix_for_set(pd, rows, feature_set)
@@ -175,7 +193,7 @@ def run_analysis(pd, optimize, stats, args):
     if n_low < 2 or n_zero < 2:
         raise SystemExit(
             f"Too few matched low/zero slides with embeddings (low={n_low}, zero={n_zero}). "
-            "Is the H-Optimus run finished?"
+            "Is the embedding run finished?"
         )
 
     y = rows["clinical_her2_group"].map({NEGATIVE_CLASS: 0, POSITIVE_CLASS: 1}).to_numpy(dtype=int)
@@ -183,7 +201,7 @@ def run_analysis(pd, optimize, stats, args):
     site_folds = leave_source_site_out_folds(rows, y)
 
     metrics_rows = []
-    for feature_set, feature_set_label in FEATURE_SETS:
+    for feature_set, label_template in FEATURE_SETS:
         design = design_for_feature_set(pd, rows, feature_set, embed_cols)
         if design.empty:
             continue
@@ -196,7 +214,7 @@ def run_analysis(pd, optimize, stats, args):
             metrics_rows.append(
                 {
                     "feature_set": feature_set,
-                    "feature_set_label": feature_set_label,
+                    "feature_set_label": labeled(label_template, args.model_label),
                     "validation_scheme": scheme,
                     "validation_scheme_label": scheme_label,
                     "n_cases": int(len(rows)),
@@ -215,14 +233,14 @@ def run_analysis(pd, optimize, stats, args):
     embed_x = rows[embed_cols].astype(float).to_numpy(dtype=float)
     pca_rows = []
     for k in pca_grid:
-        m = evaluate(optimize, stats, embed_x, y, random_folds, "hoptimus_embedding", args.l2_penalty, k)
+        m = evaluate(optimize, stats, embed_x, y, random_folds, "embedding", args.l2_penalty, k)
         pca_rows.append({"pca_components": k, **m})
     pca_robustness = pd.DataFrame(pca_rows)
 
     # Shuffled-label permutation null for the embedding under repeated CV.
     observed = float(
         metrics.loc[
-            (metrics["feature_set"] == "hoptimus_embedding")
+            (metrics["feature_set"] == "embedding")
             & (metrics["validation_scheme"] == "repeated_stratified_cv"),
             "balanced_accuracy",
         ].iloc[0]
@@ -231,11 +249,11 @@ def run_analysis(pd, optimize, stats, args):
     for _ in range(args.permutations):
         y_perm = y.copy()
         rng.shuffle(y_perm)
-        m = evaluate(optimize, stats, embed_x, y_perm, random_folds, "hoptimus_embedding", args.l2_penalty, args.pca_components)
+        m = evaluate(optimize, stats, embed_x, y_perm, random_folds, "embedding", args.l2_penalty, args.pca_components)
         null_ba.append(m["balanced_accuracy"])
     null_arr = np.array(null_ba, dtype=float)
     permutation = {
-        "feature_set": "hoptimus_embedding",
+        "feature_set": "embedding",
         "pca_components": args.pca_components,
         "observed_repeated_cv_balanced_accuracy": observed,
         "n_permutations": args.permutations,
@@ -244,7 +262,7 @@ def run_analysis(pd, optimize, stats, args):
         "null_balanced_accuracy_p95": float(np.nanquantile(null_arr, 0.95)),
         "empirical_p_balanced_accuracy": float((1 + np.sum(null_arr >= observed)) / (1 + args.permutations)),
     }
-    return rows, metrics, pca_robustness, permutation, pd.DataFrame({"null_balanced_accuracy": null_arr})
+    return rows, metrics, pca_robustness, permutation, pd.DataFrame({"null_balanced_accuracy": null_arr}), len(embed_cols)
 
 
 def metric_table_rows(metrics) -> list[list[str]]:
@@ -270,8 +288,8 @@ def metric_table_rows(metrics) -> list[list[str]]:
     return rows
 
 
-def plot_metric_comparison(plt, sns, metrics, asset_dir: Path) -> None:
-    order = [label for _, label in FEATURE_SETS]
+def plot_metric_comparison(plt, sns, metrics, asset_dir: Path, model_label: str) -> None:
+    order = [labeled(lbl, model_label) for _, lbl in FEATURE_SETS]
     plt.figure(figsize=(11.0, 5.6))
     sns.barplot(
         data=metrics,
@@ -284,7 +302,7 @@ def plot_metric_comparison(plt, sns, metrics, asset_dir: Path) -> None:
     plt.ylim(0, 1)
     plt.xlabel("Feature set")
     plt.ylabel("Balanced accuracy (HER2-low vs HER2-zero)")
-    plt.title("Generic H-Optimus-0 Embedding vs GigaTIME and Confound Baselines")
+    plt.title(f"Generic {model_label} Embedding vs GigaTIME and Confound Baselines")
     plt.xticks(rotation=20, ha="right")
     plt.legend(loc="upper left", bbox_to_anchor=(1.01, 1.0))
     plt.tight_layout()
@@ -299,9 +317,9 @@ def pick(metrics, feature_set: str, scheme: str, column: str) -> float:
     return float(subset.iloc[0]) if len(subset) else float("nan")
 
 
-def build_verdict(metrics, permutation) -> list[str]:
-    emb_cv = pick(metrics, "hoptimus_embedding", "repeated_stratified_cv", "balanced_accuracy")
-    emb_site = pick(metrics, "hoptimus_embedding", "leave_source_site_out", "balanced_accuracy")
+def build_verdict(metrics, permutation, model_label: str) -> list[str]:
+    emb_cv = pick(metrics, "embedding", "repeated_stratified_cv", "balanced_accuracy")
+    emb_site = pick(metrics, "embedding", "leave_source_site_out", "balanced_accuracy")
     giga_cv = pick(metrics, "gigatime_mean_channels", "repeated_stratified_cv", "balanced_accuracy")
     giga_site = pick(metrics, "gigatime_mean_channels", "leave_source_site_out", "balanced_accuracy")
     size_cv = pick(metrics, "slide_size_only", "repeated_stratified_cv", "balanced_accuracy")
@@ -314,7 +332,7 @@ def build_verdict(metrics, permutation) -> list[str]:
     size_robust_under_holdout = size_site >= emb_site
 
     lines = [
-        f"- The generic H-Optimus-0 embedding reaches balanced accuracy {fmt(emb_cv, 3)} under repeated stratified CV "
+        f"- The generic {model_label} embedding reaches balanced accuracy {fmt(emb_cv, 3)} under repeated stratified CV "
         f"(shuffled-label null mean {fmt(permutation['null_balanced_accuracy_mean'], 3)}, empirical p {fmt(emp_p, 4)}), "
         f"versus {fmt(giga_cv, 3)} for GigaTIME mean channels and {fmt(size_cv, 3)} for slide-size covariates.",
         f"- Under leave-source-site-out validation the embedding moves to {fmt(emb_site, 3)} "
@@ -351,7 +369,8 @@ def asset_link(asset_dir: Path, filename: str) -> str:
     return str(asset_dir / filename).replace("docs/", "")
 
 
-def write_markdown(path: Path, asset_dir: Path, args, rows, metrics, pca_robustness, permutation) -> None:
+def write_markdown(path: Path, asset_dir: Path, args, rows, metrics, pca_robustness, permutation, embedding_dim: int) -> None:
+    model_label = args.model_label
     n_low = int((rows["clinical_her2_group"] == NEGATIVE_CLASS).sum())
     n_zero = int((rows["clinical_her2_group"] == POSITIVE_CLASS).sum())
     pca_rows = [
@@ -359,14 +378,14 @@ def write_markdown(path: Path, asset_dir: Path, args, rows, metrics, pca_robustn
         for _, r in pca_robustness.iterrows()
     ]
     lines = [
-        "# Generic H&E Embedding Control (H-Optimus-0)",
+        f"# Generic H&E Embedding Control ({model_label})",
         "",
         "Status: control experiment for the HER2-low versus HER2-zero result.",
         "",
         "## Why This Control",
         "",
         "The primary result uses GigaTIME virtual mIF channels and is presented as immune/myeloid/checkpoint biology. "
-        "This control asks whether that interpretation is necessary. H-Optimus-0 is a generic pathology "
+        f"This control asks whether that interpretation is necessary. {model_label} is a generic pathology "
         "foundation-model embedding with no immune-channel meaning. If a generic embedding separates HER2-low from "
         "HER2-zero about as well as GigaTIME, and if it also collapses under source-site holdout while slide-size "
         "covariates stay strong, then the low-versus-zero axis is better described as generic morphology/tissue "
@@ -374,8 +393,8 @@ def write_markdown(path: Path, asset_dir: Path, args, rows, metrics, pca_robustn
         "",
         "## Method",
         "",
-        f"- Cohort: {len(rows)} strict high-trust slides with H-Optimus-0 embeddings ({n_low} HER2-low, {n_zero} HER2-zero).",
-        "- Embedding: `bioptimus/H-optimus-0`, 1536-d, mean-pooled over 128 random tissue tiles per slide (same slide list and 128-tile sampling as the GigaTIME primary run).",
+        f"- Cohort: {len(rows)} strict high-trust slides with {model_label} embeddings ({n_low} HER2-low, {n_zero} HER2-zero).",
+        f"- Embedding: `{args.model_id}`, {embedding_dim}-d, mean-pooled over 128 random tissue tiles per slide (same slide list and 128-tile sampling as the GigaTIME primary run).",
         f"- Classifier: regularized logistic regression on identical folds as the GigaTIME analyses; PCA ({args.pca_components} components) fit inside each training fold only.",
         f"- Comparators: slide-size covariates, source-site covariates, and GigaTIME mean channels (`{args.reference_view}` whole-slide view).",
         f"- Validation: repeated stratified {args.folds}-fold CV ({args.repeats} repeats) and leave-one-source-site-out.",
@@ -408,7 +427,7 @@ def write_markdown(path: Path, asset_dir: Path, args, rows, metrics, pca_robustn
         "",
         "## Interpretation",
         "",
-        *build_verdict(metrics, permutation),
+        *build_verdict(metrics, permutation, model_label),
         "",
         "- This is an internal control on TCGA, not external validation. It cannot prove the GigaTIME signal is "
         "biologically meaningless; it tests whether the GigaTIME-specific virtual-immune framing is required to "
@@ -435,7 +454,7 @@ def main() -> int:
     asset_dir.mkdir(parents=True, exist_ok=True)
     pd, plt, sns, optimize, stats = require_analysis_libs(out_dir / ".matplotlib")
 
-    rows, metrics, pca_robustness, permutation, null_df = run_analysis(pd, optimize, stats, args)
+    rows, metrics, pca_robustness, permutation, null_df, embedding_dim = run_analysis(pd, optimize, stats, args)
 
     metrics.to_csv(out_dir / "embedding_control_metrics.csv", index=False)
     pca_robustness.to_csv(out_dir / "embedding_control_pca_robustness.csv", index=False)
@@ -445,7 +464,9 @@ def main() -> int:
         json.dumps(
             {
                 "task": "her2_low_vs_zero",
-                "embedding_model": "bioptimus/H-optimus-0",
+                "model_label": args.model_label,
+                "embedding_model": args.model_id,
+                "embedding_dimensions": embedding_dim,
                 "reference_view": args.reference_view,
                 "pca_components": args.pca_components,
                 "folds": args.folds,
@@ -461,8 +482,8 @@ def main() -> int:
         encoding="utf-8",
     )
 
-    plot_metric_comparison(plt, sns, metrics, asset_dir)
-    write_markdown(Path(args.out_markdown), asset_dir, args, rows, metrics, pca_robustness, permutation)
+    plot_metric_comparison(plt, sns, metrics, asset_dir, args.model_label)
+    write_markdown(Path(args.out_markdown), asset_dir, args, rows, metrics, pca_robustness, permutation, embedding_dim)
     print(f"Wrote embedding control outputs to {out_dir}")
     print(f"Wrote embedding control figure to {asset_dir}")
     print(f"Wrote embedding control markdown to {args.out_markdown}")
