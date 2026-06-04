@@ -6,6 +6,7 @@ This folder contains standalone workflow scripts. Most scripts are intentionally
 
 - `gdc_query_tcga_brca.py` - query GDC TCGA-BRCA slides and STAR-count RNA files.
 - `build_tcga_brca_clinical_her2_labels.py` - build clinical HER2-positive/low/zero labels from TCGA clinical fields.
+- `build_bcnb_her2_labels.py` - build BCNB HER2-positive/low/zero labels from the gated clinical workbook.
 - `select_clinical_her2_cohort.py` - select balanced HER2 cohorts.
 - `download_clinical_her2_cohort_slides.py` - download selected diagnostic slides.
 - `download_selected_star_counts.py` - download selected STAR-count RNA files.

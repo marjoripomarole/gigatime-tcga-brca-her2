@@ -91,6 +91,7 @@ Build HER2 clinical labels:
 
 ```bash
 conda run -n gigatime-tcga python scripts/build_tcga_brca_clinical_her2_labels.py
+conda run -n gigatime-tcga python scripts/build_bcnb_her2_labels.py
 ```
 
 Select/download a clinical HER2 cohort:

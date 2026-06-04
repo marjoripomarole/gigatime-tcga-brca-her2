@@ -82,7 +82,7 @@ Remaining piece: the WSIs. The Drive folder contains `WSIs/` (the slides), `pape
 
 - Public clinical files: `data/bcnb/clinical_public/preprocessed-type-{0..4}.xlsx` (gitignored under `data/`).
 - Full clinical file: `data/bcnb/patient-clinical-data.xlsx` (gitignored; non-commercial dataset file, not redistributed).
-- Derived label table: `data/bcnb/bcnb_her2_labels.csv` (gitignored; local derivative used for analysis).
+- Derived label table: `data/bcnb/bcnb_her2_labels.csv` (gitignored; local derivative used for analysis), reproducibly built by `scripts/build_bcnb_her2_labels.py`.
 - `openpyxl` was installed into the `gigatime-tcga` conda env on 2026-06-04 to read `.xlsx` (the full BCNB clinical file is also `.xlsx`).
 
 ## Caveats
