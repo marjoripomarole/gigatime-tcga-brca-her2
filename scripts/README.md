@@ -41,6 +41,7 @@ This folder contains standalone workflow scripts. Most scripts are intentionally
 - `analyze_bcnb_patch_embedding_control.py` - patient-level BCNB HER2-low versus HER2-zero patch-embedding analysis with clinical covariate controls and shuffled-label null.
 - `analyze_bcnb_patch_model_comparison.py` - paired BCNB H-Optimus-0 versus Virchow2 comparison, dual-model ensemble check, and cross-model score agreement.
 - `analyze_bcnb_patch_stratified_performance.py` - BCNB clinical-slice robustness check for patient-mean out-of-fold image and clinical model scores across grade, ER/PR, subtype, nodal status, and Ki67 strata.
+- `analyze_bcnb_patch_score_covariate_drivers.py` - explains BCNB image-model patient scores using HER2 label, clinical covariates, and patch QC, then tests clinical/patch-QC residual low-vs-zero signal.
 
 ## Historical Analysis
 
