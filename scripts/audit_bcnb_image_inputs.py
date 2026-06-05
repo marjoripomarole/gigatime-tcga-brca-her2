@@ -19,7 +19,7 @@ DEFAULT_WSI_DIR = Path("data/bcnb/WSIs")
 DEFAULT_PATCH_ZIP = Path("data/bcnb/paper_patches.zip")
 DEFAULT_PATCH_DIR = Path("data/bcnb/paper_patches")
 
-WSI_SUFFIXES = {".svs", ".tif", ".tiff", ".ndpi", ".mrxs"}
+WSI_SUFFIXES = {".svs", ".tif", ".tiff", ".ndpi", ".mrxs", ".jpg", ".jpeg"}
 PATCH_SUFFIXES = {".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 METADATA_SUFFIXES = {".csv", ".tsv", ".xlsx", ".xls", ".json", ".txt", ".yaml", ".yml"}
 

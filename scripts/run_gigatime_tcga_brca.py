@@ -10,6 +10,7 @@ import random
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -41,6 +42,12 @@ GIGATIME_CHANNELS = [
 
 IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+SLIDE_SUFFIXES = {".svs", ".tif", ".tiff", ".ndpi", ".mrxs", ".jpg", ".jpeg", ".png"}
+PIL_SUFFIXES = {".jpg", ".jpeg", ".png"}
+DEFAULT_METADATA_COLUMNS = (
+    "patient_id,clinical_her2_group,her2_ihc,her2_status,grade,ER,PR,"
+    "ki67,molecular_subtype,aln_status,tumor_size,age"
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -48,6 +55,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--slides-dir", default="data/tcga_brca/slides", help="Directory containing TCGA .svs files.")
     parser.add_argument("--slide-table", default=None, help="Optional CSV listing slides to process.")
     parser.add_argument("--slide-path-column", default="slide_local_path", help="Column in --slide-table containing slide paths.")
+    parser.add_argument(
+        "--metadata-columns",
+        default=DEFAULT_METADATA_COLUMNS,
+        help="Comma-separated slide-table columns to copy into slide_scores.csv when --slide-table is used.",
+    )
     parser.add_argument(
         "--missing-slide-policy",
         default="error",
@@ -66,6 +78,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tile-order", default="random", choices=["random", "row-major"], help="Tile traversal order before applying --tile-limit.")
     parser.add_argument("--random-seed", type=int, default=42, help="Seed used when --tile-order=random.")
     parser.add_argument("--device", default="auto", choices=["auto", "cuda", "mps", "cpu"], help="Torch device.")
+    parser.add_argument(
+        "--slide-backend",
+        default="auto",
+        choices=["auto", "openslide", "pil"],
+        help="Slide reader. Use pil for BCNB full-slide .jpg files; auto chooses by suffix and falls back when possible.",
+    )
     parser.add_argument("--max-slides", type=int, default=0, help="Maximum slides to process. Use 0 for all.")
     parser.add_argument("--save-tile-csv", action="store_true", help="Write one row per tile.")
     parser.add_argument("--heatmap-channels", default="CD3,CD8,PD-L1,CK", help="Comma-separated channels for tile heatmaps.")
@@ -88,6 +106,7 @@ def import_runtime(gigatime_repo: Path):
     from PIL import Image
     import openslide
 
+    Image.MAX_IMAGE_PIXELS = None
     return torch, gigatime, snapshot_download, Image, openslide
 
 
@@ -117,12 +136,21 @@ def load_model(torch, gigatime_class, snapshot_download, device):
 
 
 def find_slides(slides_dir: Path) -> list[Path]:
-    suffixes = {".svs", ".tif", ".tiff"}
-    return sorted(path for path in slides_dir.rglob("*") if path.suffix.lower() in suffixes)
+    return sorted(path for path in slides_dir.rglob("*") if path.suffix.lower() in SLIDE_SUFFIXES)
 
 
-def find_slides_from_table(path: Path, slide_path_column: str, missing_policy: str) -> list[Path]:
-    slides: list[Path] = []
+def parse_metadata_columns(raw: str) -> list[str]:
+    return [column.strip() for column in raw.split(",") if column.strip()]
+
+
+def find_slide_records_from_table(
+    path: Path,
+    slide_path_column: str,
+    metadata_columns: list[str],
+    missing_policy: str,
+) -> list[tuple[Path, dict[str, str]]]:
+    slide_records: list[tuple[Path, dict[str, str]]] = []
+    seen: set[Path] = set()
     missing: list[Path] = []
     with path.open("r", newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
@@ -139,7 +167,15 @@ def find_slides_from_table(path: Path, slide_path_column: str, missing_policy: s
                 continue
             slide_path = Path(raw_value)
             if slide_path.exists():
-                slides.append(slide_path)
+                if slide_path in seen:
+                    continue
+                seen.add(slide_path)
+                metadata = {
+                    column: row.get(column, "")
+                    for column in metadata_columns
+                    if column in reader.fieldnames and column != slide_path_column
+                }
+                slide_records.append((slide_path, metadata))
             else:
                 missing.append(slide_path)
     if missing:
@@ -148,13 +184,54 @@ def find_slides_from_table(path: Path, slide_path_column: str, missing_policy: s
             example = "\n".join(f"- {slide}" for slide in missing[:10])
             raise FileNotFoundError(f"{message}\n{example}")
         print(f"{message} Skipping missing slides.", file=sys.stderr)
-    return list(dict.fromkeys(slides))
+    return slide_records
 
 
 def case_from_slide_path(path: Path) -> str:
     text = str(path)
     match = re.search(r"(TCGA-[A-Z0-9]{2}-[A-Z0-9]{4})", text)
-    return match.group(1) if match else path.stem[:12]
+    if match:
+        return match.group(1)
+    stem = path.stem
+    bcnb_match = re.match(r"(?:patient|case|sample|slide|bcnb|p)?[_-]?0*(\d{1,4})(?:[_\-.]|$)", stem, flags=re.IGNORECASE)
+    if bcnb_match:
+        return str(int(bcnb_match.group(1)))
+    return stem[:64]
+
+
+class RasterImageSlide:
+    """Tiny OpenSlide-like adapter for large flat RGB images such as BCNB JPG WSIs."""
+
+    def __init__(self, image_module: Any, path: Path):
+        self.path = path
+        self.image = image_module.open(path)
+        self.level_count = 1
+        self.level_dimensions = [self.image.size]
+        self.level_downsamples = [1.0]
+
+    def read_region(self, location: tuple[int, int], level: int, size: tuple[int, int]):
+        if level != 0:
+            raise ValueError(f"{self.path} has one raster level, cannot use level {level}")
+        x, y = location
+        width, height = size
+        return self.image.crop((x, y, x + width, y + height)).convert("RGBA")
+
+    def close(self) -> None:
+        self.image.close()
+
+
+def open_slide_any(openslide, Image, slide_path: Path, backend: str):
+    suffix = slide_path.suffix.lower()
+    if backend == "pil" or (backend == "auto" and suffix in PIL_SUFFIXES):
+        return RasterImageSlide(Image, slide_path), "pil"
+    if backend in {"auto", "openslide"}:
+        try:
+            return openslide.OpenSlide(str(slide_path)), "openslide"
+        except Exception:
+            if backend == "openslide":
+                raise
+            return RasterImageSlide(Image, slide_path), "pil"
+    raise ValueError(f"Unsupported slide backend: {backend}")
 
 
 def tissue_fraction(rgb: np.ndarray) -> float:
@@ -274,34 +351,41 @@ def save_heatmaps(tile_rows: list[dict[str, float | int | str]], channels: list[
         plt.close()
 
 
-def run_slide(torch, model, openslide, slide_path: Path, args: argparse.Namespace, device) -> tuple[dict[str, object], list[dict[str, object]]]:
-    slide = openslide.OpenSlide(str(slide_path))
+def run_slide(torch, model, openslide, Image, slide_path: Path, args: argparse.Namespace, device) -> tuple[dict[str, object], list[dict[str, object]]]:
+    slide, backend = open_slide_any(openslide, Image, slide_path, args.slide_backend)
     if args.level >= slide.level_count:
         raise ValueError(f"{slide_path} has {slide.level_count} levels, cannot use level {args.level}")
+    slide_width = int(slide.level_dimensions[args.level][0])
+    slide_height = int(slide.level_dimensions[args.level][1])
     tile_records: list[dict[str, object]] = []
     batch = []
     batch_meta = []
-    with torch.no_grad():
-        for tile in iter_tissue_tiles(
-            slide,
-            args.level,
-            args.tile_size,
-            args.tile_stride,
-            args.tissue_threshold,
-            args.tile_limit,
-            args.tile_order,
-            args.random_seed,
-        ):
-            batch.append(preprocess_tile(torch, tile["rgb"], device))
-            batch_meta.append({key: value for key, value in tile.items() if key != "rgb"})
-            if len(batch) == args.batch_size:
+    try:
+        with torch.no_grad():
+            for tile in iter_tissue_tiles(
+                slide,
+                args.level,
+                args.tile_size,
+                args.tile_stride,
+                args.tissue_threshold,
+                args.tile_limit,
+                args.tile_order,
+                args.random_seed,
+            ):
+                batch.append(preprocess_tile(torch, tile["rgb"], device))
+                batch_meta.append({key: value for key, value in tile.items() if key != "rgb"})
+                if len(batch) == args.batch_size:
+                    tile_records.extend(infer_batch(torch, model, batch, batch_meta, args.activation_threshold))
+                    batch = []
+                    batch_meta = []
+            if batch:
                 tile_records.extend(infer_batch(torch, model, batch, batch_meta, args.activation_threshold))
-                batch = []
-                batch_meta = []
-        if batch:
-            tile_records.extend(infer_batch(torch, model, batch, batch_meta, args.activation_threshold))
-    slide.close()
+    finally:
+        slide.close()
     slide_row = summarize_slide(tile_records, slide_path)
+    slide_row["slide_backend"] = backend
+    slide_row["slide_width"] = slide_width
+    slide_row["slide_height"] = slide_height
     return slide_row, tile_records
 
 
@@ -323,7 +407,7 @@ def main() -> int:
     args = parse_args()
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    torch, gigatime_class, snapshot_download, _image, openslide = import_runtime(Path(args.gigatime_repo))
+    torch, gigatime_class, snapshot_download, Image, openslide = import_runtime(Path(args.gigatime_repo))
     device = resolve_device(torch, args.device)
     if device.type != "cpu" and not os.environ.get("HF_TOKEN"):
         print("HF_TOKEN is not set; model download may fail if terms are not accepted.", file=sys.stderr)
@@ -331,13 +415,19 @@ def main() -> int:
     model = load_model(torch, gigatime_class, snapshot_download, device)
 
     if args.slide_table:
-        slides = find_slides_from_table(Path(args.slide_table), args.slide_path_column, args.missing_slide_policy)
+        slide_records = find_slide_records_from_table(
+            Path(args.slide_table),
+            args.slide_path_column,
+            parse_metadata_columns(args.metadata_columns),
+            args.missing_slide_policy,
+        )
     else:
-        slides = find_slides(Path(args.slides_dir))
+        slide_records = [(slide_path, {}) for slide_path in find_slides(Path(args.slides_dir))]
     if args.max_slides:
-        slides = slides[: args.max_slides]
-    if not slides:
-        raise FileNotFoundError(f"No .svs/.tif/.tiff slides found under {args.slides_dir}")
+        slide_records = slide_records[: args.max_slides]
+    if not slide_records:
+        source = args.slide_table or args.slides_dir
+        raise FileNotFoundError(f"No supported slide files found from {source}")
 
     heatmap_channels = [channel.strip() for channel in args.heatmap_channels.split(",") if channel.strip()]
     slide_scores_path = out_dir / "slide_scores.csv"
@@ -345,12 +435,15 @@ def main() -> int:
     slide_rows: list[dict[str, object]] = read_existing_csv(slide_scores_path) if args.resume else []
     all_tile_rows: list[dict[str, object]] = read_existing_csv(tile_scores_path) if args.resume and args.save_tile_csv else []
     processed_slide_ids = {str(row.get("slide_id", "")) for row in slide_rows if row.get("slide_id")}
-    for index, slide_path in enumerate(slides, start=1):
+    for index, (slide_path, metadata) in enumerate(slide_records, start=1):
         if args.resume and slide_path.stem in processed_slide_ids:
-            print(f"[{index}/{len(slides)}] Skipping existing {slide_path}", file=sys.stderr)
+            print(f"[{index}/{len(slide_records)}] Skipping existing {slide_path}", file=sys.stderr)
             continue
-        print(f"[{index}/{len(slides)}] Processing {slide_path}", file=sys.stderr)
-        slide_row, tile_rows = run_slide(torch, model, openslide, slide_path, args, device)
+        print(f"[{index}/{len(slide_records)}] Processing {slide_path}", file=sys.stderr)
+        slide_row, tile_rows = run_slide(torch, model, openslide, Image, slide_path, args, device)
+        for key, value in metadata.items():
+            if key not in slide_row:
+                slide_row[key] = value
         slide_rows.append(slide_row)
         for tile_row in tile_rows:
             tile_row["slide_id"] = slide_row["slide_id"]

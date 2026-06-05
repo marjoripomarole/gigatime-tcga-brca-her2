@@ -8,6 +8,8 @@ This folder contains standalone workflow scripts. Most scripts are intentionally
 - `build_tcga_brca_clinical_her2_labels.py` - build clinical HER2-positive/low/zero labels from TCGA clinical fields.
 - `build_bcnb_her2_labels.py` - build BCNB HER2-positive/low/zero labels from the gated clinical workbook.
 - `audit_bcnb_image_inputs.py` - inspect BCNB WSI/patch files and patient-ID mapping before model runs.
+- `download_bcnb_wsis.py` - download approved BCNB full-WSI files into ignored `data/bcnb/WSIs`; supports SharePoint/OneDrive folder manifests, resumable file-by-file downloads, numeric patient-JPG filtering, and Google Drive fallback via `gdown`.
+- `build_bcnb_wsi_slide_table.py` - build a patient/clinical-label slide table from locally downloaded BCNB full WSIs.
 - `build_bcnb_patch_manifest.py` - build patient-linked manifests for BCNB precomputed patches, including deterministic capped patch sampling.
 - `select_clinical_her2_cohort.py` - select balanced HER2 cohorts.
 - `download_clinical_her2_cohort_slides.py` - download selected diagnostic slides.
@@ -16,7 +18,7 @@ This folder contains standalone workflow scripts. Most scripts are intentionally
 
 ## Image Feature Extraction
 
-- `run_gigatime_tcga_brca.py` - primary GigaTIME virtual mIF feature extraction.
+- `run_gigatime_tcga_brca.py` - primary GigaTIME virtual mIF feature extraction; also supports BCNB flat `.jpg` WSIs via `--slide-backend pil` and copies selected slide-table clinical metadata into `slide_scores.csv`.
 - `run_hoptimus_tcga_brca.py` - H0-mini/H-Optimus H&E embedding extraction.
 - `run_virchow2_tcga_brca.py` - Virchow2 H&E embedding extraction (second embedding control).
 - `run_bcnb_patch_embeddings.py` - extract patient-level BCNB patch embeddings from capped patch manifests using H-Optimus/H0-mini/Virchow2.

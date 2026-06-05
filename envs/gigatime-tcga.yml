@@ -8,6 +8,7 @@ dependencies:
   - pip:
       - albumentations~=1.4
       - easydict~=1.13
+      - gdown~=5.2
       - huggingface-hub~=0.26
       - matplotlib~=3.9
       - numpy~=2.2

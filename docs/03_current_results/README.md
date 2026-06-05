@@ -21,6 +21,14 @@ Read these in this order:
 7. `clinical_her2_high_trust_tile128_source_site_generalization.md`
 8. `clinical_her2_high_trust_tile128_within_source_site_low_zero.md`
 
+## BCNB External Validation
+
+- `bcnb_exploration.md`
+- `bcnb_gigatime_full_wsi_smoke.md`
+- `bcnb_paper_patches_audit.md`
+- `bcnb_patch_model_comparison_hoptimus0_virchow2_hash_capped10_low_zero.md`
+- `bcnb_patch_score_covariate_drivers_hoptimus0_virchow2_hash_capped10_low_zero.md`
+
 ## RNA And HER2 Biology Guardrails
 
 - `clinical_her2_high_trust_tile128_local_erbb2_validation.md`
@@ -29,4 +37,4 @@ Read these in this order:
 
 ## Current Best Language
 
-The current result supports a hypothesis-generating H&E/GigaTIME tissue-context association around HER2-low versus HER2-zero. It does not yet support a clinical classifier, source-independent HER2 biology claim, or HER2 isoform detection claim.
+The current result supports a hypothesis-generating H&E/GigaTIME tissue-context association around HER2-low versus HER2-zero. It does not yet support a clinical classifier, source-independent HER2 biology claim, or HER2 isoform detection claim. BCNB is the immediate external-validation path: the full WSI download and balanced GigaTIME smoke are complete, but the full 781-slide low/zero WSI analysis is still the next run.

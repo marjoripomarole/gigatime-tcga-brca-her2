@@ -58,7 +58,7 @@ This is a single-scanner external HER2-low-versus-zero cohort of 654 vs 127. The
 
 Grade is present and shows the literature-expected pattern: among graded low/zero cases, HER2-zero is proportionally more often grade 3 (42/90 = 47%) than HER2-low (181/577 = 31%), consistent with HER2-zero being more aggressive (see `external_validation_candidates.md` literature context). Because grade is available, the grade confounder that TCGA could not provide can now be tested and adjusted, exactly as slide-size/ER/PR were handled internally. ER also differs between groups (HER2-low 86% ER+, HER2-zero 65% ER+), and is likewise available as a covariate.
 
-Image-input update: `paper_patches.zip` has now been downloaded and audited locally (see `bcnb_paper_patches_audit.md`). It maps cleanly to all 1,058 patients and can support a fast patch-based smoke/pilot. Full WSIs are still the stronger paper-grade input if a patch pilot finds a signal worth testing with slide-level controls.
+Image-input update: `paper_patches.zip` has now been downloaded and audited locally (see `bcnb_paper_patches_audit.md`). It maps cleanly to all 1,058 patients and can support a fast patch-based smoke/pilot. Full WSIs are now also downloaded locally from the approved BCNB SharePoint/OneDrive mirror and map cleanly to all 1,058 patients (see `bcnb_gigatime_full_wsi_smoke.md`).
 
 ## FIRST PATCH PILOTS 2026-06-04, SENSITIVITY UPDATED 2026-06-05: H-Optimus-0 And Virchow2 Find A Modest Non-Null Signal
 
@@ -100,12 +100,10 @@ This is the first real evidence that a low/zero-associated morphology signal exi
 
 ## Recommended Next Steps
 
-1. Decide the image input path:
-   - Patch pilot: ready for the next smoke; use `paper_patches.zip` with deterministic hash-capped patches per patient and patient-level aggregation.
-   - Full WSIs: strongest and cleanest for a paper-grade analysis, because the same tile-sampling, tissue-fraction, and slide-size controls can be reused.
+1. Use the full-WSI path for the next paper-grade GigaTIME experiment now that the 1,058 patient JPG WSIs are local. Keep the patch pilots as fast foundation-model controls and sampling-sensitivity evidence.
 2. Build or refresh the BCNB patch manifest with `scripts/build_bcnb_patch_manifest.py`, keeping restricted data under ignored `data/bcnb/`.
 3. Extend patch-sampling/PCA sensitivity with more seeds or more patches per patient, or launch heavier WSI processing only if the paper needs stronger slide/tissue-area controls than the precomputed patch pilot can provide.
-4. Run `scripts/audit_bcnb_image_inputs.py` again after any WSI download to confirm which files are present and whether patient IDs map cleanly.
+4. Run the full BCNB low/zero GigaTIME cohort from `data/bcnb/bcnb_wsi_slide_table_low_zero.csv` after confirming the balanced WSI smoke outputs.
 5. Reuse the existing confound discipline: compare image embeddings against grade, ER/PR, Ki67, molecular subtype, nodal status, and tissue/slide-size features. In BCNB, slide-size/source-site should not classify low-vs-zero well; if it does, that is itself a warning sign.
 6. Treat H-Optimus-0/Virchow2 as primary foundation-model controls; keep GigaTIME/DeepSpot/HistoPrism as interpretive follow-ups unless the BCNB signal survives clinical and acquisition controls.
 
@@ -115,7 +113,8 @@ This is the first real evidence that a low/zero-associated morphology signal exi
 - Full clinical file: `data/bcnb/patient-clinical-data.xlsx` (gitignored; non-commercial dataset file, not redistributed).
 - Derived label table: `data/bcnb/bcnb_her2_labels.csv` (gitignored; local derivative used for analysis), reproducibly built by `scripts/build_bcnb_her2_labels.py`.
 - Paper patch archive: `data/bcnb/paper_patches.zip` (gitignored; 76,578 256x256 RGB `.jpg` patches; clean patient-ID mapping; see `bcnb_paper_patches_audit.md`).
-- Full WSI directory: `data/bcnb/WSIs/` is not present locally as of the latest image-input audit; full-WSI processing is therefore a data-download decision, not a ready local run.
+- Full WSI directory: `data/bcnb/WSIs/BCNB/WSIs/` is present locally and contains 1,058 numeric patient `.jpg` WSIs, plus 21 metadata `.json` files left from the earlier Google Drive partial download. The local WSI audit maps all 1,058 images to known BCNB patients.
+- Full WSI slide tables: `data/bcnb/bcnb_wsi_slide_table_low_zero.csv` contains 781 HER2-low/zero rows with no missing patients; `data/bcnb/bcnb_wsi_slide_table_low_zero_balanced20.csv` is a deterministic 10 low / 10 zero smoke table.
 - Patch manifests: `data/bcnb/bcnb_patch_manifest.csv`, `data/bcnb/bcnb_patch_manifest_capped10.csv`, preferred pilot `data/bcnb/bcnb_patch_manifest_hash_capped10.csv`, and second hash replicate `data/bcnb/bcnb_patch_manifest_hash20260605_capped10.csv` (gitignored; built by `scripts/build_bcnb_patch_manifest.py`).
 - Image-input audit: `scripts/audit_bcnb_image_inputs.py` checks for `data/bcnb/WSIs/`, `data/bcnb/paper_patches.zip`, and `data/bcnb/paper_patches/` without extracting or running models.
 - `openpyxl` was installed into the `gigatime-tcga` conda env on 2026-06-04 to read `.xlsx` (the full BCNB clinical file is also `.xlsx`).
