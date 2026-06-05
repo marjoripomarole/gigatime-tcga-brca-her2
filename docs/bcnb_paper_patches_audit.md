@@ -1,6 +1,6 @@
 # BCNB Paper Patches Audit
 
-Status: completed 2026-06-04. This records the patch-first BCNB image-input triage. The raw archive is local under ignored `data/bcnb/` and is not redistributed.
+Status: completed 2026-06-04; patch-sampling sensitivity updated 2026-06-05. This records the patch-first BCNB image-input triage. The raw archive is local under ignored `data/bcnb/` and is not redistributed.
 
 ## Source And Local Artifact
 
@@ -40,6 +40,7 @@ Two local manifests were generated from the zip central directory:
 | `data/bcnb/bcnb_patch_manifest.csv` | 76,578 | Full patch inventory |
 | `data/bcnb/bcnb_patch_manifest_capped10.csv` | 10,580 | Historical lexicographic deterministic smoke input with 10 patches per patient |
 | `data/bcnb/bcnb_patch_manifest_hash_capped10.csv` | 10,580 | Preferred pilot input: deterministic hash-sampled 10 patches per patient |
+| `data/bcnb/bcnb_patch_manifest_hash20260605_capped10.csv` | 10,580 | Second deterministic hash-sampled 10-patch replicate |
 
 ## HER2 Group Coverage
 
@@ -57,12 +58,12 @@ One patch per HER2 group was extracted to `data/bcnb/patch_samples/` for local i
 
 ## Interpretation
 
-`paper_patches.zip` is usable for a fast BCNB smoke/pilot because it has complete patient coverage and clean patient-ID mapping. It is not a full substitute for WSIs in the strongest paper-grade analysis, because the patches are precomputed from annotated tumor regions and do not preserve whole-slide acquisition features such as slide size, tissue area, or full tissue-composition context. The first H-Optimus-0 and Virchow2 hash-capped patient-level patch pilots plus paired model comparison are complete (`bcnb_patch_embedding_control_hoptimus0_hash_capped10_low_zero.md`, `bcnb_patch_embedding_control_virchow2_hash_capped10_low_zero.md`, and `bcnb_patch_model_comparison_hoptimus0_virchow2_hash_capped10_low_zero.md`) and found a modest non-null signal with high cross-model concordance. The first H-Optimus patch-selection sensitivity check (`bcnb_patch_sampling_sensitivity_hoptimus0.md`) changes effect size slightly but not the conclusion. The appropriate patch workflow is therefore:
+`paper_patches.zip` is usable for a fast BCNB smoke/pilot because it has complete patient coverage and clean patient-ID mapping. It is not a full substitute for WSIs in the strongest paper-grade analysis, because the patches are precomputed from annotated tumor regions and do not preserve whole-slide acquisition features such as slide size, tissue area, or full tissue-composition context. The first H-Optimus-0 and Virchow2 hash-capped patient-level patch pilots plus paired model comparison are complete (`bcnb_patch_embedding_control_hoptimus0_hash_capped10_low_zero.md`, `bcnb_patch_embedding_control_virchow2_hash_capped10_low_zero.md`, and `bcnb_patch_model_comparison_hoptimus0_virchow2_hash_capped10_low_zero.md`) and found a modest non-null signal with high cross-model concordance. H-Optimus-0 patch-selection sensitivity now includes lexicographic capped10 and two hash seeds (`bcnb_patch_sampling_sensitivity_hoptimus0.md`), changing effect size slightly but not the conclusion. The appropriate patch workflow is therefore:
 
 1. Build a patch manifest from the zip central directory.
 2. Run any new model as a one-patient or tiny balanced low/zero embedding smoke from extracted patches first.
 3. For full patch pilots, use `bcnb_patch_manifest_hash_capped10.csv` or another capped manifest and aggregate embeddings to patient level before classification.
-4. Run multi-seed patch-sampling sensitivity, or reserve full WSI download for a paper question that needs slide/tissue-area controls beyond the precomputed patch pilot.
+4. Extend patch-sampling sensitivity only if the paper needs more seeds or more patches per patient, or reserve full WSI download for a paper question that needs slide/tissue-area controls beyond the precomputed patch pilot.
 
 ## Commands Run
 
@@ -78,4 +79,9 @@ conda run -n gigatime-tcga python scripts/build_bcnb_patch_manifest.py \
   --sampling-method hash \
   --sampling-seed 20260604 \
   --output data/bcnb/bcnb_patch_manifest_hash_capped10.csv
+conda run -n gigatime-tcga python scripts/build_bcnb_patch_manifest.py \
+  --max-patches-per-patient 10 \
+  --sampling-method hash \
+  --sampling-seed 20260605 \
+  --output data/bcnb/bcnb_patch_manifest_hash20260605_capped10.csv
 ```

@@ -49,7 +49,7 @@ Status: paired external-cohort comparison using the same BCNB patients and the s
 - H-Optimus-0 and Virchow2 produce concordant but not identical patient scores on the same BCNB patches.
 - The dual-model embedding does not create a large jump over either model alone, which argues against a hidden strong signal missed by one encoder.
 - Clinical covariates remain at least as strong by balanced accuracy, so the current BCNB result should be framed as a weak, reproducible morphology/covariate-associated signal rather than a clinically deployable HER2-low versus zero classifier.
-- The next escalation, if needed for a manuscript, is patch-sampling sensitivity or full-WSI processing to test whether broader tissue context changes the effect size.
+- The next escalation, if needed for a manuscript, is broader patch-sampling sensitivity, more patches per patient, or full-WSI processing to test whether broader tissue context changes the effect size.
 
 ## Output Files
 
