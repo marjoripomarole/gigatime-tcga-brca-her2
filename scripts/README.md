@@ -8,6 +8,7 @@ This folder contains standalone workflow scripts. Most scripts are intentionally
 - `build_tcga_brca_clinical_her2_labels.py` - build clinical HER2-positive/low/zero labels from TCGA clinical fields.
 - `build_bcnb_her2_labels.py` - build BCNB HER2-positive/low/zero labels from the gated clinical workbook.
 - `audit_bcnb_image_inputs.py` - inspect BCNB WSI/patch files and patient-ID mapping before model runs.
+- `probe_xenium_breast_rna_validation.py` - feasibility probe for the 10x Xenium Human Breast RNA-validation cohort; downloads only the minimal artifacts (gene panel, H&E alignment, transcripts) and checks channel-gene coverage, alignment invertibility, per-channel transcript counts, and H&E/transcript extent overlap. Writes `docs/xenium_breast_rna_validation_probe.md`.
 - `download_bcnb_wsis.py` - download approved BCNB full-WSI files into ignored `data/bcnb/WSIs`; supports SharePoint/OneDrive folder manifests, resumable file-by-file downloads, numeric patient-JPG filtering, and Google Drive fallback via `gdown`.
 - `build_bcnb_wsi_slide_table.py` - build a patient/clinical-label slide table from locally downloaded BCNB full WSIs.
 - `build_bcnb_patch_manifest.py` - build patient-linked manifests for BCNB precomputed patches, including deterministic capped patch sampling.
@@ -44,6 +45,7 @@ This folder contains standalone workflow scripts. Most scripts are intentionally
 - `analyze_bcnb_patch_model_comparison.py` - paired BCNB H-Optimus-0 versus Virchow2 comparison, dual-model ensemble check, and cross-model score agreement.
 - `analyze_bcnb_patch_stratified_performance.py` - BCNB clinical-slice robustness check for patient-mean out-of-fold image and clinical model scores across grade, ER/PR, subtype, nodal status, and Ki67 strata.
 - `analyze_bcnb_patch_score_covariate_drivers.py` - explains BCNB image-model patient scores using HER2 label, clinical covariates, and patch QC, then tests clinical/patch-QC residual low-vs-zero signal.
+- `validate_gigatime_xenium_rna.py` - within-slide validation of GigaTIME virtual channels against Xenium breast spatial RNA: tiles the post-Xenium H&E on GigaTIME's grid, bins transcripts onto the same tiles via the inverse H&E alignment affine, and reports per-channel virtual-vs-RNA Spearman with a spatial block-bootstrap CI. Includes a model-free `--alignment-check-only` tissue-vs-transcript sanity mode. Writes `docs/xenium_breast_rna_validation_results.md`.
 
 ## Historical Analysis
 
