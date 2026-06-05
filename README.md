@@ -182,6 +182,7 @@ The project is broader than one model:
 - **GigaTIME** is the current primary model because it generates virtual mIF/TIME channels from H&E.
 - **H-Optimus-0 and Virchow2** are the completed generic H&E embedding controls; both reproduce the TCGA low-versus-zero separation and source-site collapse.
 - **BCNB H-Optimus-0 and Virchow2 patch embeddings** are the first external pilots: both show a modest non-null low-versus-zero signal. The paired model comparison shows high patient-score agreement and only a small dual-model gain, and the first H-Optimus sampling check does not overturn this, so neither model family is hiding a strong standalone classifier.
+- **H0-mini** is not currently runnable for BCNB in this workspace because the Hugging Face gated model load fails before inference; see `docs/bcnb_h0mini_access_probe.md`.
 - **H0-mini** remains a possible smaller gated Bioptimus follow-up if access is granted.
 - **Phikon** is an open fallback for tile embeddings when gated model access blocks progress.
 - **HistoPrism** and **DeepSpot** are interpretive follow-ups for tile/spot-level virtual gene-expression style outputs; they should not be treated as primary biological validation yet.

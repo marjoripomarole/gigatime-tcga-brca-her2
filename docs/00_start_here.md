@@ -15,6 +15,7 @@ The current primary result is a hypothesis-generating tissue-context association
 - It is not yet safe as independent HER2 biology because slide-size, TCGA source-site, and tissue-composition confounding remain strong.
 - As of 2026-06-04, two independent generic foundation-model embeddings (H-Optimus-0 and Virchow2) reproduce the low-versus-zero separation and the same source-site collapse, so the GigaTIME virtual-immune framing is not required to explain it. The most parsimonious reading is generic morphology tracking TCGA acquisition structure. TCGA-internal evidence is now considered exhausted.
 - Also as of 2026-06-04, BCNB is confirmed as the immediate external validation cohort: full clinical data preserve HER2 IHC 0/1+/2+/3+, yielding 127 HER2-zero and 654 HER2-low cases from one scanner, with grade/ER/PR/Ki67 available for covariate control. The precomputed patch archive is local and audited. H-Optimus-0 and Virchow2 hash-capped patient-level patch pilots are complete and agree: the signal is statistically non-null but modest (H-Optimus-0 BA 0.597 / AUC 0.640; Virchow2 BA 0.600 / AUC 0.643; dual-model BA 0.609 / AUC 0.651), comparable to clinical covariates rather than a strong standalone classifier. The first H-Optimus lexicographic-versus-hash sampling check changes the effect size slightly but not the conclusion.
+- H0-mini has been probed only as an access smoke and is currently blocked by Hugging Face gated-model access/token visibility, not by a code or data error.
 
 ## Read First
 
@@ -45,3 +46,4 @@ TCGA-internal evidence is exhausted (see the 2026-06-04 entry in `paper_proposal
 4. Get a pathologist or tumor-region review loop around the case-driver tiles.
 5. Do not pull more TCGA-BRCA slides: HER2-zero is capped at 61 cases (already fully used), so more data only tightens estimates around the confound.
 6. Keep DeepSpot/HistoPrism as interpretive gene-expression-style follow-ups, not as primary validation; obtain transcript-level/junction-level RNA before any HER2 isoform claim.
+7. Revisit H0-mini only after `bioptimus/H0-mini` access is approved and the token is visible to `conda run -n gigatime-tcga`.

@@ -109,6 +109,7 @@ This is the first real evidence that a low/zero-associated morphology signal exi
 - Full clinical file: `data/bcnb/patient-clinical-data.xlsx` (gitignored; non-commercial dataset file, not redistributed).
 - Derived label table: `data/bcnb/bcnb_her2_labels.csv` (gitignored; local derivative used for analysis), reproducibly built by `scripts/build_bcnb_her2_labels.py`.
 - Paper patch archive: `data/bcnb/paper_patches.zip` (gitignored; 76,578 256x256 RGB `.jpg` patches; clean patient-ID mapping; see `bcnb_paper_patches_audit.md`).
+- Full WSI directory: `data/bcnb/WSIs/` is not present locally as of the latest image-input audit; full-WSI processing is therefore a data-download decision, not a ready local run.
 - Patch manifests: `data/bcnb/bcnb_patch_manifest.csv`, `data/bcnb/bcnb_patch_manifest_capped10.csv`, and preferred pilot `data/bcnb/bcnb_patch_manifest_hash_capped10.csv` (gitignored; built by `scripts/build_bcnb_patch_manifest.py`).
 - Image-input audit: `scripts/audit_bcnb_image_inputs.py` checks for `data/bcnb/WSIs/`, `data/bcnb/paper_patches.zip`, and `data/bcnb/paper_patches/` without extracting or running models.
 - `openpyxl` was installed into the `gigatime-tcga` conda env on 2026-06-04 to read `.xlsx` (the full BCNB clinical file is also `.xlsx`).
