@@ -86,6 +86,8 @@ The clinical-stratified performance check is now complete (`bcnb_patch_stratifie
 
 The score-driver analysis is now complete (`bcnb_patch_score_covariate_drivers_hoptimus0_virchow2_hash_capped10_low_zero.md`). It asks what explains the image-model score itself. HER2 label alone explains little dual-model score variance (R2 0.036), while clinical covariates + patch QC explain more (R2 0.161). After residualizing the dual image score against clinical covariates + patch QC, low/zero AUC drops from 0.660 to 0.592. That means the measured covariates explain part, but not all, of the weak image signal.
 
+The visual score-extreme QC is now complete (`bcnb_patch_score_visual_qc_hoptimus0_virchow2_hash_capped10_low_zero.md`). It renders hash-sampled patch montages for true HER2-zero scored zero-like, HER2-low scored zero-like, and HER2-low scored low-like cases. The zero-like HER2-low false positives are not blank/low-tissue artifacts, and the zero-like score extremes are enriched for grade 3 / ER-negative / PR-negative / triple-negative profiles, matching the quantitative covariate-driver story.
+
 This is the first real evidence that a low/zero-associated morphology signal exists outside TCGA, but it is not a strong standalone HER2-low-versus-zero classifier from the patch pilot. The result currently supports a careful interpretation: BCNB contains weak image-readable morphology/covariate signal, plausibly grade/receptor/tissue-context related, with some residual morphology not captured by the measured covariates. The next decision is whether the paper needs multi-seed patch-sampling sensitivity or full WSI processing for stronger slide/tissue-area controls.
 
 ## Why BCNB Is Now The Priority External Cohort

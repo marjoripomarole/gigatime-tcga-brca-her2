@@ -59,6 +59,7 @@ This folder contains standalone workflow scripts. Most scripts are intentionally
 - `render_virtual_mif_composites.py`
 - `render_clinical_her2_visual_qc.py`
 - `render_case_driver_visual_qc.py`
+- `render_bcnb_patch_score_visual_qc.py` - render BCNB hash-capped patch montages for image-score extreme cases.
 - `build_clinical_her2_findings_report.py`
 - `build_her2_classifier_results_report.py`
 
