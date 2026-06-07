@@ -27,32 +27,43 @@ import json
 import os
 from pathlib import Path
 
-# GigaTIME per-channel Pearson (virtual vs measured mIF activation density).
-# Source: Valanarasu et al., Cell 189:386-400 (2026), Figure S5 / Figure 2C.
-# Transcribed from the published panels; approximate (+/- ~0.01). T-bet not legible in S5.
-GIGATIME_MIF_PEARSON: dict[str, float] = {
-    "DAPI": 0.98,
-    "CK": 0.96,
-    "CD3": 0.89,
-    "CD20": 0.88,
-    "CD4": 0.86,
-    "PD-L1": 0.74,
-    "Caspase3": 0.64,
-    "CD138": 0.59,
-    "CD16": 0.56,
-    "CD68": 0.54,
-    "CD14": 0.51,
-    "Tryptase": 0.49,
-    "PD-1": 0.47,
-    "CD11c": 0.47,
-    "Transgelin": 0.36,
-    "Actin": 0.32,
-    "CD8": 0.30,
-    "CD34": 0.28,
-    "Ki67": 0.28,
-    "PHH3": 0.13,
+# GigaTIME per-channel Pearson (virtual vs measured mIF; GigaTIME's own 8x8-box activation-count
+# metric) is RECOMPUTED on the released 50-patch sample test set with the released model
+# (scripts/recompute_gigatime_mif_pearson.py), replacing the earlier eyeballed Fig S5 transcription.
+# NOTE: the released sample is NOT the paper's full test set; the paper reports higher full-set values
+# in Fig S5 (e.g. CK ~0.96, CD3 ~0.89). These recomputed values are a reproducible released-sample
+# measurement used as the figure's x-axis.
+GIGATIME_SOURCE = ("recomputed on 50 released test patches (prov-gigatime/GigaTIME, GigaTIME 8x8-box "
+                   "Pearson); released sample, not paper full-set Fig S5")
+
+
+# Recomputed values, committed for repo-only reproducibility (results/ and the released test data are
+# gitignored). Regenerate via scripts/recompute_gigatime_mif_pearson.py; the CSV overrides this fallback.
+RECOMPUTED_MIF_PEARSON: dict[str, float] = {
+    "DAPI": 0.720, "CD11c": 0.558, "PD-L1": 0.550, "CK": 0.530, "CD16": 0.517,
+    "CD68": 0.516, "CD138": 0.490, "CD4": 0.473, "CD3": 0.453, "CD34": 0.365,
+    "Ki67": 0.357, "T-bet": 0.334, "CD14": 0.302, "CD8": 0.231, "PD-1": 0.172,
+    "Tryptase": 0.135,
 }
-GIGATIME_SOURCE = "Valanarasu et al., Cell 189:386-400 (2026), Fig S5 / 2C (transcribed)"
+
+
+def load_gigatime_mif(csv_path: Path) -> dict[str, float]:
+    """Per-channel GigaTIME-vs-measured-mIF Pearson: prefer the recompute CSV, else committed values."""
+    import csv as _csv
+
+    out: dict[str, float] = {}
+    try:
+        with csv_path.open(encoding="utf-8") as fh:
+            for r in _csv.DictReader(fh):
+                try:
+                    v = float(r["pearson_mean"])
+                except (TypeError, ValueError, KeyError):
+                    continue
+                if v == v:  # skip NaN
+                    out[r["channel"]] = v
+    except FileNotFoundError:
+        pass
+    return out or dict(RECOMPUTED_MIF_PEARSON)
 
 
 def parse_args() -> argparse.Namespace:
@@ -62,6 +73,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--asset-dir", type=Path, default=Path("docs/assets/gigatime_vs_rna_specificity"))
     p.add_argument("--out-csv", type=Path,
                    default=Path("results/gigatime_xenium_rna_validation/gigatime_vs_rna_specificity.csv"))
+    p.add_argument("--gigatime-mif-csv", type=Path,
+                   default=Path("results/gigatime_mif_recompute/per_channel_pearson.csv"))
     return p.parse_args()
 
 
@@ -84,12 +97,12 @@ def load_rna(report_path: Path) -> dict[str, dict]:
     return rows
 
 
-def build_table(rna: dict[str, dict]) -> list[dict]:
+def build_table(rna: dict[str, dict], mif: dict[str, float]) -> list[dict]:
     rows = []
     for channel, rec in rna.items():
         rows.append({
             "channel": channel,
-            "gigatime_mif_pearson": GIGATIME_MIF_PEARSON.get(channel),
+            "gigatime_mif_pearson": mif.get(channel),
             **rec,
         })
     # Sort by GigaTIME mIF agreement descending, missing last.
@@ -182,7 +195,8 @@ def main() -> int:
     import matplotlib.pyplot as plt
 
     rna = load_rna(args.rna_report)
-    rows = build_table(rna)
+    mif = load_gigatime_mif(args.gigatime_mif_csv)
+    rows = build_table(rna, mif)
     write_csv(args.out_csv, rows)
     make_scatter(plt, rows, args.asset_dir / "mif_agreement_vs_rna_specificity_scatter.png")
     make_bars(plt, rows, args.asset_dir / "per_channel_bars.png")

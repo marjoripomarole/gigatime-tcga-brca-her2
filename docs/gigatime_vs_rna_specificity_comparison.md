@@ -1,37 +1,51 @@
 # GigaTIME mIF Agreement vs Our RNA Specificity (draft figure + notes)
 
 Status: draft paper material. The candidate centerpiece figure for the virtual-mIF
-specificity-audit paper. Numbers are reproducible via
-`scripts/make_gigatime_vs_rna_specificity_figure.py`.
+specificity-audit paper. Fully reproducible: the RNA specificity via
+`scripts/validate_gigatime_xenium_rna.py`, the figure via
+`scripts/make_gigatime_vs_rna_specificity_figure.py`, and GigaTIME's own mIF agreement
+**recomputed** (not eyeballed) on its released test patches via
+`scripts/recompute_gigatime_mif_pearson.py`.
 
 ## The one-line claim this figure supports
 
-**Agreement with the training modality (held-out mIF) does not imply channel
+**Agreement with the training modality (measured mIF) does not imply channel
 specificity against an independent modality (spatial RNA) once per-tile cellularity
 is controlled.** GigaTIME validates each channel only as virtual-X vs measured-X mIF;
 several channels that pass that test fail an independent RNA specificity test.
 
 ## The data
 
-| Channel | GigaTIME vs held-out mIF (Pearson, Fig S5) | Our RNA raw Spearman | Our RNA partial r \| cellularity | Own-gene row-max? |
-|---|---:|---:|---:|:--:|
-| CK | 0.96 | 0.146 | **0.308** | yes |
-| CD3 | 0.89 | 0.428 | 0.256 | no (tracks CD11c-RNA) |
-| CD20 | 0.88 | 0.214 | 0.085 | no |
-| CD4 | 0.86 | 0.428 | 0.211 | no |
-| **PD-L1** | **0.74** | 0.223 | **-0.072** | no |
-| CD16 | 0.56 | 0.221 | -0.036 | no |
-| **CD68** | 0.54 | 0.132 | **-0.333** | no |
-| CD14 | 0.51 | 0.167 | -0.048 | no |
-| Tryptase | 0.49 | 0.331 | 0.028 | no |
-| PD-1 | 0.47 | 0.214 | 0.053 | no |
-| CD11c | 0.47 | 0.330 | 0.147 | yes |
-| CD8 | 0.30 | 0.358 | 0.237 | no |
-| Ki67 | 0.28 | 0.337 | -0.020 | no |
+GigaTIME mIF agreement is GigaTIME's own 8x8-box activation-count Pearson (virtual vs
+measured mIF), **recomputed on the released 50-patch sample test set with the released
+model** (`prov-gigatime/GigaTIME`), sorted descending. RNA columns are our within-slide
+Xenium audit (Rep1).
 
-Context not in the join: GigaTIME's single best channel is **DAPI (Pearson 0.98)** —
-the nuclear/cellularity marker. It cannot appear in a specificity test because it *is*
-cellularity; that it tops their agreement ranking is itself the tell.
+| Channel | GigaTIME vs measured mIF (Pearson, recomputed) | Our RNA raw Spearman | Our RNA partial r \| cellularity | Own-gene row-max? |
+|---|---:|---:|---:|:--:|
+| CD11c | 0.56 | 0.330 | **0.147** | yes |
+| **PD-L1** | **0.55** | 0.223 | **-0.072** | no |
+| **CK** | **0.53** | 0.146 | **0.308** | yes |
+| CD16 | 0.52 | 0.221 | -0.036 | no |
+| **CD68** | **0.52** | 0.132 | **-0.333** | no |
+| CD4 | 0.47 | 0.428 | 0.211 | no |
+| CD3 | 0.45 | 0.428 | 0.256 | no |
+| Ki67 | 0.36 | 0.337 | -0.020 | no |
+| CD14 | 0.30 | 0.167 | -0.048 | no |
+| CD8 | 0.23 | 0.358 | 0.237 | no |
+| PD-1 | 0.17 | 0.214 | 0.053 | no |
+| Tryptase | 0.13 | 0.331 | 0.028 | no |
+| CD20 | n/a (B cells too sparse) | 0.214 | 0.085 | no |
+
+The released 50-patch sample is **not** the paper's full test set — the paper's Fig S5
+reports higher full-set values (e.g. CK ~0.96, CD3 ~0.89) — but even GigaTIME's own
+released-sample agreement (<=0.56 for markers) does not predict RNA specificity: at
+~0.5 mIF agreement the cellularity-controlled RNA partial spans the full range from
+**CD68 -0.33** to **CK +0.31**. CD20 had no measurable mIF agreement on this sample.
+
+Context: GigaTIME's single best channel is **DAPI (recomputed Pearson 0.72)** — the
+nuclear/cellularity marker. It cannot appear in a specificity test because it *is*
+cellularity; that it tops the agreement ranking is itself the tell.
 
 Figures: `assets/gigatime_vs_rna_specificity/mif_agreement_vs_rna_specificity_scatter.png`
 (primary) and `assets/gigatime_vs_rna_specificity/per_channel_bars.png`.
@@ -43,8 +57,9 @@ Figures: `assets/gigatime_vs_rna_specificity/mif_agreement_vs_rna_specificity_sc
   correlation but strongest after cellularity control, because epithelium-rich tiles are
   immune-poor.
 - **Fail (cellularity, not marker):** CD68 (-0.33), PD-L1 (-0.07), CD16 (-0.04),
-  CD14 (-0.05), Ki67 (-0.02) collapse to or below zero. Several of these have *high*
-  mIF agreement (CD68 0.54, PD-L1 0.74) — exactly the divergence the figure shows.
+  CD14 (-0.05), Ki67 (-0.02) collapse to or below zero. Several of these have *comparable*
+  mIF agreement to the channels that hold (CD68 0.52, PD-L1 0.55, vs CK 0.53) — exactly the
+  dissociation the figure shows.
 - **Off-diagonal specificity failures:** own-gene is the row-max for only 2/13 channels
   (CK, CD11c). The immune channels (CD3/CD4/CD8/CD20) collectively track lymphocyte-dense
   regions; e.g. virtual-CD3 correlates with CD11c-RNA slightly more than CD3-RNA.
@@ -56,6 +71,10 @@ GigaTIME (Valanarasu et al., Cell 2026, STAR Methods), all virtual-vs-measured-*
 - Pearson (cell): activation counts in 8x8 windows -> per-channel Pearson, virtual vs measured.
 - Spearman (slide): activation density per 256x256 patch -> Spearman, virtual vs measured.
 - External "validation": virtual-vs-virtual subtype-level agreement on TCGA (r=0.88); TCGA has no mIF.
+
+Our recompute of GigaTIME's mIF Pearson (`scripts/recompute_gigatime_mif_pearson.py`) uses
+GigaTIME's **own** released model, released test patches, dataset class and the identical 8x8-box
+metric above — so the x-axis is GigaTIME's own claim measured on released data, not our reinterpretation.
 
 Ours (`scripts/validate_gigatime_xenium_rna.py`), virtual-vs-independent-**RNA**, within-slide:
 - Raw: per-tile Spearman of virtual-channel activation vs binned transcript density of the channel's gene(s).
@@ -76,12 +95,18 @@ specificity could be RNA-protein discordance, not model failure. Defenses, stron
 4. **Lead with CD68 (-0.33), not PD-L1.** Macrophage RNA-protein concordance is fine, so its
    negative partial is hard to dismiss; PD-L1 has known RNA-protein discordance, so it is the
    weakest example to foreground.
+5. **The dissociation is also model-level, not just GigaTIME.** A second virtual-mIF model
+   (ROSIE) audited identically disagrees with GigaTIME on which channels are specific
+   (see `gigatime_vs_rosie_field_level.md`) — so the unreliability is a property of the approach.
 
 ## Limitations of this draft
 
-- GigaTIME mIF Pearson values are **transcribed from the published Fig S5 / 2C panels** (+/- ~0.01).
-  Verify against the source figure (or request underlying values) before publication.
-- Generalization now confirmed across 9 sections / 2 platforms (4 HEST-1k Xenium patients + 3 Visium
+- GigaTIME mIF agreement is now **recomputed** on the released sample (no longer eyeballed). But
+  the released 50-patch sample is not the paper's full test set, so the recomputed agreements are
+  lower than the paper's reported Fig S5 values; they are used here only to show that GigaTIME's own
+  measured agreement does not predict RNA specificity. (To use the paper's exact full-set numbers
+  would require the article's source data, which is behind the Cell paywall as a figure.)
+- Generalization confirmed across 9 sections / 2 platforms (4 HEST-1k Xenium patients + 3 Visium
   + Janesick Rep1/Rep2); see `hest_rna_validation_summary.md`. The single-section result holds and
   sharpens: specificity is tissue-variable, with the aggregate T-cell contrast the most reproducible.
 - GigaTIME was trained on lung adenocarcinoma mIF; breast was only a generalization TMA check (mIF only).
@@ -91,18 +116,22 @@ specificity could be RNA-protein discordance, not model failure. Defenses, stron
 
 ## Draft caption (scatter)
 
-"GigaTIME channel agreement with its held-out training modality (measured mIF, Pearson;
-Valanarasu et al. 2026, Fig S5) versus our independent within-slide RNA specificity (Spearman
-partial correlation controlling for per-tile cellularity, Xenium breast). High mIF agreement
-does not predict RNA specificity: CD68 and PD-L1 agree well with held-out mIF yet have
-non-positive cellularity-controlled RNA correlation, while only CK and aggregate T-cell channels
-retain channel-specific RNA signal."
+"GigaTIME channel agreement with its own measured mIF (Pearson, GigaTIME's 8x8-box metric recomputed
+on the released test patches with the released model) versus our independent within-slide RNA
+specificity (Spearman partial correlation controlling for per-tile cellularity, Xenium breast).
+GigaTIME's own measured-mIF agreement does not predict RNA specificity: PD-L1 and CD68 agree ~0.5
+with measured mIF yet have non-positive cellularity-controlled RNA correlation, while CK retains the
+strongest channel-specific RNA signal."
 
 ## Provenance
 
 - GigaTIME paper: Valanarasu et al., "Multimodal AI generates virtual population for tumor
   microenvironment modeling," Cell 189:386-400 (Jan 22, 2026); doi:10.1016/j.cell.2025.11.016.
-  Per-channel mIF Pearson from Fig S5 / Fig 2C; metric definitions from STAR Methods.
+  Full-set per-channel mIF Pearson in Fig S5 / Fig 2C; metric definitions from STAR Methods.
+- GigaTIME mIF agreement (x-axis): **recomputed** on the released sample test patches
+  (`prov-gigatime/GigaTIME` model + Dropbox sample data linked in the GigaTIME README) with
+  `scripts/recompute_gigatime_mif_pearson.py`; output `results/gigatime_mif_recompute/per_channel_pearson.csv`.
+  Pickle masks were verified non-executing (pickletools) before loading.
 - Our RNA audit: `docs/xenium_breast_rna_validation_results.md`,
   `results/gigatime_xenium_rna_validation/xenium_rna_validation_report.json`
   (10x Xenium Human Breast Rep1; Janesick et al. 2023).
@@ -119,4 +148,8 @@ retain channel-specific RNA signal."
    trustworthy (per-measurement concordance Pearson r=0.12; 44/83 channel-specific calls differ): only the T-cell
    channels (CD8/CD4) are reliably shared; GigaTIME recovers CD3/CD11c/CK, ROSIE instead recovers CD14/CD68. Field-level
    claim established. See `gigatime_vs_rosie_field_level.md`.
-3. Confirm or replace the transcribed GigaTIME Fig S5 values with source values.
+3. DONE (2026-06-06): replaced the eyeballed Fig S5 transcription with GigaTIME's own mIF Pearson
+   **recomputed** on the released test patches (released model + its 8x8-box metric;
+   `scripts/recompute_gigatime_mif_pearson.py`). The figure x-axis is now reproducible. Caveat: the
+   released sample is not the paper's full set (recomputed agreements are lower), but the dissociation
+   between mIF agreement and RNA specificity holds (PD-L1/CD68 ~0.5 mIF yet fail RNA; CK holds).
