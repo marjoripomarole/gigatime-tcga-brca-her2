@@ -71,15 +71,23 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--alignment-check-only", action="store_true", help="Skip GigaTIME; only correlate tissue fraction vs total transcript density.")
     p.add_argument("--out-dir", type=Path, default=None, help="Defaults to results/gigatime_hest_rna_validation/<id>.")
     p.add_argument("--asset-dir", type=Path, default=None, help="Defaults to docs/assets/gigatime_hest_rna_validation_<id>.")
-    p.add_argument("--out-markdown", type=Path, default=None, help="Defaults to docs/hest_rna_validation_<id>.md.")
+    p.add_argument("--out-markdown", type=Path, default=None, help="Defaults to docs/<model>_rna_validation_<id>.md.")
+    p.add_argument("--model", choices=["gigatime", "rosie"], default="gigatime",
+                   help="Virtual-mIF model whose channels are audited against RNA.")
+    p.add_argument("--rosie-weights", type=Path, default=Path("external/ROSIE/best_model_single.pth"))
+    p.add_argument("--rosie-grid", type=int, default=3, help="ROSIE patch centers per tile (grid x grid).")
+    p.add_argument("--rosie-batch", type=int, default=64, help="ROSIE patch batch size.")
+    p.add_argument("--mpp", type=float, default=None, help="H&E microns/px (ROSIE only; defaults to metadata pixel_size_um_estimated).")
     args = p.parse_args()
     args.wsi = args.wsi or args.hest_dir / "wsis" / f"{args.id}.tif"
     args.transcripts = args.transcripts or args.hest_dir / "transcripts" / f"{args.id}_transcripts.parquet"
     args.st = args.st or args.hest_dir / "st" / f"{args.id}.h5ad"
     args.metadata = args.metadata or args.hest_dir / "metadata" / f"{args.id}.json"
-    args.out_dir = args.out_dir or Path("results/gigatime_hest_rna_validation") / args.id
-    args.asset_dir = args.asset_dir or Path("docs/assets") / f"gigatime_hest_rna_validation_{args.id}"
-    args.out_markdown = args.out_markdown or Path("docs") / f"hest_rna_validation_{args.id}.md"
+    tag = "gigatime" if args.model == "gigatime" else args.model
+    md_stem = "hest_rna_validation" if args.model == "gigatime" else f"{tag}_rna_validation"
+    args.out_dir = args.out_dir or Path(f"results/{tag}_hest_rna_validation") / args.id
+    args.asset_dir = args.asset_dir or Path("docs/assets") / f"{tag}_hest_rna_validation_{args.id}"
+    args.out_markdown = args.out_markdown or Path("docs") / f"{md_stem}_{args.id}.md"
     return args
 
 
@@ -273,8 +281,18 @@ def main() -> int:
     missing_channels = [c for c in CHANNEL_GENES if c not in present_channels]
     print(f"On-grid signal units: {n_primary:,}; channels with a panel gene: {present_channels}", file=sys.stderr)
 
-    print("Tiling H&E" + ("" if args.alignment_check_only else " + GigaTIME inference") + "...", file=sys.stderr)
-    tiles, _gigarun = xrna.collect_tiles(args, he_array, args.alignment_check_only)
+    rosie_mpp = None
+    if args.model == "gigatime" or args.alignment_check_only:
+        print("Tiling H&E" + ("" if args.alignment_check_only else " + GigaTIME inference") + "...", file=sys.stderr)
+        tiles, _gigarun = xrna.collect_tiles(args, he_array, args.alignment_check_only)
+    else:
+        import run_rosie_inference as rosie
+
+        rosie_mpp = args.mpp if args.mpp else meta.get("pixel_size_um_estimated")
+        if not rosie_mpp:
+            raise SystemExit("ROSIE needs an H&E mpp: pass --mpp or provide metadata pixel_size_um_estimated.")
+        print(f"Tiling H&E + ROSIE inference (mpp={float(rosie_mpp):.4f})...", file=sys.stderr)
+        tiles = rosie.collect_tiles_rosie(args, he_array, float(rosie_mpp))
     if not tiles:
         raise SystemExit("No tissue tiles found; check --tissue-threshold and the WSI.")
 
@@ -319,6 +337,8 @@ def main() -> int:
 
     report = {
         "sample": args.id,
+        "model": args.model,
+        "rosie_mpp": rosie_mpp,
         "source": "HEST-1k",
         "modality": args.source,
         "st_technology": meta.get("st_technology", args.source),
@@ -393,9 +413,9 @@ def _interpretation_lines(report: dict) -> list[str]:
         checks.append("T-cell " + ", ".join(f"{c} {per[c]['partial_r_control_total']:.2f}" for c in tcell))
     if "CD68" in per:
         cd68 = per["CD68"]["partial_r_control_total"]
-        checks.append(f"CD68 = {cd68:.2f} ({'negative as in Rep1/Rep2' if cd68 < 0 else 'not negative here'})")
+        checks.append(f"CD68 = {cd68:.2f} ({'negative' if cd68 < 0 else 'not negative'})")
     if checks:
-        lines.append("- Headline-channel check vs the Xenium Rep1/Rep2 finding: " + "; ".join(checks) + ".")
+        lines.append("- Headline-channel check (CK epithelium; T-cell; CD68 macrophage): " + "; ".join(checks) + ".")
     return lines
 
 
@@ -416,12 +436,13 @@ def write_markdown_hest(path: Path, args, report: dict) -> None:
             f"`pxl_col/row_in_fullres`. Analysis restricted to the **{report.get('n_occupied_tiles')}** tiles containing >=1 spot "
             f"(spots are ~100 um apart, sparser than 256 px tiles)."
         )
+    model_name = {"gigatime": "GigaTIME", "rosie": "ROSIE"}.get(report.get("model", "gigatime"), report.get("model"))
     lines = [
-        f"# HEST-1k Breast RNA-Validation Results — {report['sample']}",
+        f"# HEST-1k Breast RNA-Validation Results — {report['sample']} ({model_name})",
         "",
-        f"Status: within-slide validation of GigaTIME virtual channels against HEST-1k spatial RNA "
-        f"({report.get('st_technology')}). Independent replication of the Xenium Rep1/Rep2 audit on a different "
-        f"breast sample to test generalization.",
+        f"Status: within-slide validation of {model_name} virtual channels against HEST-1k spatial RNA "
+        f"({report.get('st_technology')}). Same audited pipeline as the GigaTIME run, applied to a second "
+        f"H&E->virtual-mIF model for a field-level specificity claim.",
         "",
         f"- Sample: `{report['sample']}` ({report.get('st_technology')}, HEST-1k); {pid}; "
         f"`{report.get('subseries') or ''}`. Dataset: {report.get('dataset_title') or 'n/a'}.",

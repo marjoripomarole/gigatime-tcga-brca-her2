@@ -12,6 +12,7 @@ external/GigaTIME/
 external/HistoPrism/
 external/DeepSpot/
 external/DeepSpotTutorial/
+external/ROSIE/
 
 # Python caches
 __pycache__/

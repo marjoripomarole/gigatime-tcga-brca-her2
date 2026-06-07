@@ -85,6 +85,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out-dir", type=Path, default=Path("results/gigatime_xenium_rna_validation"))
     parser.add_argument("--asset-dir", type=Path, default=Path("docs/assets/gigatime_xenium_rna_validation"))
     parser.add_argument("--out-markdown", type=Path, default=Path("docs/xenium_breast_rna_validation_results.md"))
+    parser.add_argument("--model", choices=["gigatime", "rosie"], default="gigatime",
+                        help="Virtual-mIF model whose channels are audited against RNA.")
+    parser.add_argument("--rosie-weights", type=Path, default=Path("external/ROSIE/best_model_single.pth"))
+    parser.add_argument("--rosie-grid", type=int, default=2, help="ROSIE patch centers per tile (grid x grid).")
+    parser.add_argument("--rosie-batch", type=int, default=64, help="ROSIE patch batch size.")
+    parser.add_argument("--rosie-mpp", type=float, default=None, help="H&E microns/px for ROSIE (required for --model rosie).")
     return parser.parse_args()
 
 
@@ -465,8 +471,16 @@ def main() -> int:
         gmask = sub_genes == gene
         gene_grids[gene] = bin_grid_counts(hx_sub[gmask], hy_sub[gmask], stride, n_rows, n_cols, width, height)
 
-    print("Tiling H&E" + ("" if args.alignment_check_only else " + GigaTIME inference") + "...", file=sys.stderr)
-    tiles, _gigarun = collect_tiles(args, he_array, args.alignment_check_only)
+    if args.model == "rosie" and not args.alignment_check_only:
+        import run_rosie_inference as rosie
+
+        if not args.rosie_mpp:
+            raise SystemExit("ROSIE needs --rosie-mpp (H&E microns/px) for the Janesick H&E.")
+        print(f"Tiling H&E + ROSIE inference (mpp={args.rosie_mpp:.4f})...", file=sys.stderr)
+        tiles = rosie.collect_tiles_rosie(args, he_array, float(args.rosie_mpp))
+    else:
+        print("Tiling H&E" + ("" if args.alignment_check_only else " + GigaTIME inference") + "...", file=sys.stderr)
+        tiles, _gigarun = collect_tiles(args, he_array, args.alignment_check_only)
     if not tiles:
         raise SystemExit("No tissue tiles found; check --tissue-threshold and the H&E image.")
     print(f"Tissue tiles: {len(tiles)}", file=sys.stderr)
@@ -534,6 +548,7 @@ def main() -> int:
 
     report = {
         "sample": args.sample,
+        "model": getattr(args, "model", "gigatime"),
         "he_shape": [height, width],
         "alignment_direction": direction,
         "alignment_in_bounds_fraction": in_bounds,

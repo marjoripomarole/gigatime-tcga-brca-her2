@@ -33,6 +33,7 @@ Core current reports:
 - `her2_isoform_validation_feasibility.md`
 - `her2_isoform_state_hypothesis.md`
 - `hest_rna_validation_summary.md` - cross-sample (9 sections, 2 platforms: HEST-1k Xenium + Visium) RNA-specificity generalization of the GigaTIME virtual channels; per-sample reports are `hest_rna_validation_<id>.md`.
+- `gigatime_vs_rosie_field_level.md` - two-model field-level comparison (GigaTIME vs ROSIE) on the same 9 sections: the virtual-channel specificity ceiling generalizes across models, which disagree on which channels are reliable (concordance r=0.12).
 
 ## Methods
 

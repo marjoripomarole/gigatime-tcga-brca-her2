@@ -114,5 +114,9 @@ retain channel-specific RNA signal."
    IDC patients + 3 HEST-1k Visium whole-transcriptome (IDC+ILC); aggregated with Janesick Rep1/Rep2
    in `hest_rna_validation_summary.md` (9 sections, 2 platforms). T-cell channels (CD3/CD8/CD4)
    consistently specific (8/9), CK variable (6/9), CD68/CD14/CD16/PD-L1/Ki67 never specific (CD68 0/9).
-2. Audit >=1 second virtual-mIF model (ROSIE / MIPHEI-ViT) for a field-level claim.
+2. DONE (2026-06-06): audited ROSIE (Wu et al. 2025, ConvNeXt, 50-marker; HF ericwu09/ROSIE) on the same 9 sections
+   via the identical pipeline. Both models show weak, tissue-variable specificity AND disagree on which channels are
+   trustworthy (per-measurement concordance Pearson r=0.12; 44/83 channel-specific calls differ): only the T-cell
+   channels (CD8/CD4) are reliably shared; GigaTIME recovers CD3/CD11c/CK, ROSIE instead recovers CD14/CD68. Field-level
+   claim established. See `gigatime_vs_rosie_field_level.md`.
 3. Confirm or replace the transcribed GigaTIME Fig S5 values with source values.

@@ -51,6 +51,15 @@ explicitly stress-testing every confound.
    never specific** (CD68 0/9). Specificity is tissue-variable — one Xenium patient and the ILC case
    show essentially none — confirming and sharpening point 5. See `docs/hest_rna_validation_summary.md`.
 
+7. **Two-model field-level confirmation (2026-06-06).** A second, independent H&E→virtual-mIF model — ROSIE
+   (Wu et al. 2025, ConvNeXt, 50 markers) — was run through the identical RNA-specificity audit on the same 9
+   sections. ROSIE also shows only weak, tissue-variable marker specificity, and the two models **disagree on which
+   channels are trustworthy** (per-measurement concordance Pearson r=0.12; 44/83 channel-specific calls differ).
+   Only the T-cell channels (CD8/CD4) are reliably shared; GigaTIME recovers CD3/CD11c/CK while ROSIE instead
+   recovers CD14/CD68. So the limited, tissue-dependent specificity is a property of the **H&E→virtual-mIF approach**,
+   not of GigaTIME — no single model's virtual channels can be trusted as quantitative readouts.
+   See `docs/gigatime_vs_rosie_field_level.md`.
+
 ## Strongest findings (ranked)
 
 1. **The flagship HER2 imaging signal is a confound, not biology** — demonstrated cleanly by
