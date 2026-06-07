@@ -35,6 +35,7 @@ Core current reports:
 - `her2_isoform_state_hypothesis.md`
 - `hest_rna_validation_summary.md` - cross-sample (9 sections, 2 platforms: HEST-1k Xenium + Visium) RNA-specificity generalization of the GigaTIME virtual channels; per-sample reports are `hest_rna_validation_<id>.md`.
 - `gigatime_vs_rosie_field_level.md` - two-model field-level comparison (GigaTIME vs ROSIE) on the same 9 sections: the virtual-channel specificity ceiling generalizes across models, which disagree on which channels are reliable (concordance r=0.12).
+- `gigatime_orion_finetune_results.md` - controlled in-domain experiment (Orion CRC): the specificity ceiling is **domain shift, not intrinsic** — in-domain fine-tuning rescues every channel (CD68 −0.16→+0.53; 9/9 specific). Out-of-domain baseline: `gigatime_orion_baseline_CRC01.md`.
 
 ## Methods
 
